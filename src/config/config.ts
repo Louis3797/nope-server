@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import Joi from 'joi';
+import { type DeepReadonly } from 'utility-types';
 
 dotenv.config({
   path: path.resolve(__dirname, '../../.env')
@@ -24,7 +25,15 @@ if (error) {
   );
 }
 
-const config = {
+const config: DeepReadonly<{
+  node_env: 'production' | 'development' | 'test';
+  app: {
+    port: number;
+  };
+  cors: {
+    origin: string;
+  };
+}> = {
   node_env: validatedEnv.NODE_ENV,
   app: {
     port: validatedEnv.PORT
@@ -32,6 +41,6 @@ const config = {
   cors: {
     origin: validatedEnv.CORS_ORIGIN
   }
-} as const;
+};
 
 export default config;

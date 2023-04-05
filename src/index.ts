@@ -1,9 +1,11 @@
-import app from './app';
+import server from './app';
 import config from './config/config';
 import logger from './middleware/logger';
 
-const server = app.listen(Number(config.app.port), () => {
-  logger.log('info', `Server is running on Port: ${config.app.port}`);
+const port: number = config.app.port;
+
+server.listen(port, () => {
+  logger.log('info', `Server is running on Port: ${port}`);
 });
 
 process.on('SIGTERM', () => {

@@ -7,8 +7,16 @@ import compressFilter from './utils/compressFilter.util';
 import { errorHandler } from './middleware/errorHandler';
 import config from './config/config';
 import { xssMiddleware } from './middleware/xssMiddleware';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const app: Express = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: String(config.cors.origin).split('|')
+  }
+});
 
 // Helmet is used to secure this app by configuring the http-header
 app.use(helmet());
@@ -34,10 +42,19 @@ app.use(
   })
 );
 
+io.on('connection', (socket) => {
+  console.log('A user connected, socket id: ' + socket.id);
+
+  // Handle disconnect event
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
 app.all('*', (_req, res) => {
   res.status(404).json({ error: '404 Not Found' });
 });
 
 app.use(errorHandler);
 
-export default app;
+export default server;
