@@ -12,7 +12,7 @@
     "start": "yarn run build && NODE_ENV=production node --trace-warnings ./dist/index.js",
     "watch": "tsc --project './tsconfig.build.json' --watch",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint --fix --ext .",
+    "lint:fix": "eslint --fix --ext src/**/*.ts",
     "prettier:format": "prettier --write .",
     "prettier:check": "prettier --check .",
     "test": "jest",
@@ -77,19 +77,10 @@
     "ts-jest": "^29.0.5",
     "typescript": "5.0.2"
   },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "npm run lint-staged"
-    }
-  },
-  "commitizen": {
-    "path": "./node_modules/cz-conventional-changelog"
-  },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
-      "npx prettier --write",
-      "npx eslint --fix"
+      "prettier --write",
+      "eslint --fix"
     ]
   },
   "config": {
