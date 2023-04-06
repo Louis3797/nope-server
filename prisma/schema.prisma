@@ -23,7 +23,9 @@ enum BracketStatus {
 
 model Player {
   id                      String                @id @default(cuid())
-  name                    String                @unique
+  username                String                @unique
+  firstname               String
+  lastname                String
   createdAt               DateTime              @default(now())
   password                String
   gamesWon                Int                   @default(0)
@@ -33,6 +35,7 @@ model Player {
   won_tournament_brackets Bracket[]             @relation(name: "Bracket_Winner_To_User")
   tournament_brackets     Bracket[]             @relation(name: "Bracket_To_User")
   tournamentStatistic     TournamentStatistic[] @relation(name: "PlayerToTournamentStatistic")
+  gameMoveHistory         Move[]                @relation(name: "MoveToPlayer")
 }
 
 model Game {
@@ -43,6 +46,7 @@ model Game {
   player    Player[]  @relation(name: "PlayerToGame")
   bracket   Bracket?  @relation(name: "BracketToGame", fields: [bracketId], references: [id])
   bracketId String?
+  moves     Move[]    @relation(name: "MoveToGame")
 }
 
 model Tournament {
@@ -82,4 +86,16 @@ model TournamentStatistic {
   wins          Int        @default(0)
   losses        Int        @default(0)
   winPercentage Float      @default(0)
+}
+
+model Move {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  player    Player   @relation(name: "MoveToPlayer", fields: [playerId], references: [id])
+  playerId  String
+  game      Game     @relation(name: "MoveToGame", fields: [gameId], references: [id])
+  gameId    String
+  action    String   @db.VarChar(256)
+  reason    String   @db.VarChar(256)
+  compliant Boolean  @default(true)
 }
