@@ -13,9 +13,6 @@
   <a href="https://github.com/Louis3797/nope-server/issues/">
     <img src="https://img.shields.io/github/issues/Louis3797/nope-server" alt="open issues" />
   </a>
-  <a href="https://github.com/Louis3797/nope-server/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Louis3797/nope-server.svg" alt="license" />
-  </a>
 </p>
 
 <h5>
