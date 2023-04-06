@@ -177,13 +177,17 @@ This project uses Yarn as package manager
 ### Installation
 
 ```bash
-  git clone <github-repo>
+  git clone https://github.com/Louis3797/nope-server.git
 
-  cd <name>
+  cd nope-server
+
+  cp .env.example .env
 
   yarn install # install dependencies
 
   yarn husky install
+
+  yarn prisma migrate dev --name init 
 
   yarn prisma:gen
 ```
@@ -265,5 +269,5 @@ Run Docker Image as Container
 Start Server and MySQL environment with docker compose
 
 ```bash
-  docker-compose up
+  yarn docker:prod
 ```

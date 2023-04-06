@@ -175,13 +175,17 @@ Dieses Projekt nutzt Yarn als Packetmanager
 ### Installation
 
 ```bash
-  git clone <github-repo>
+  git clone https://github.com/Louis3797/nope-server.git
 
-  cd <name>
+  cd nope-server
+
+  cp .env.example .env
 
   yarn install # install dependencies
 
   yarn husky install
+
+  yarn prisma migrate dev --name init 
 
   yarn prisma:gen
 ```
@@ -265,5 +269,5 @@ Docker-Image als Container ausführen
 Server und MySQL-Umgebung mit docker compose starten
 
 ```bash
-  docker-compose up
+  yarn docker:prod
 ```
