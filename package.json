@@ -15,11 +15,14 @@
     "lint:fix": "eslint --fix --ext .",
     "prettier:format": "prettier --write .",
     "prettier:check": "prettier --check .",
-    "prettier:format:file": "prettier --write ",
     "test": "jest",
     "test:watch": "jest -i --watchAll",
     "coverage": "jest -i --coverage",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prisma:gen": "prisma generate",
+    "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "docker:test": "docker-compose -f docker-compose.yml -f docker-compose.test.yml up"
   },
   "dependencies": {
     "@prisma/client": "^4.11.0",

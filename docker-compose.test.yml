@@ -1,0 +1,7 @@
+version: '3.9'
+services:
+  nope-server:
+    build:
+      target: test
+    environment:
+      NODE_ENV: test
