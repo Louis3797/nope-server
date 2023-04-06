@@ -4,26 +4,26 @@
   
 <!-- Badges -->
 <p>
-  <a href="https://github.com/Louis3797/express-ts-auth-service/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/Louis3797/express-ts-auth-service" alt="contributors" />
+  <a href="https://github.com/Louis3797/nope-server/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/Louis3797/nope-server" alt="contributors" />
   </a>
   <a href="">
-    <img src="https://img.shields.io/github/last-commit/Louis3797/express-ts-auth-service" alt="last update" />
+    <img src="https://img.shields.io/github/last-commit/Louis3797/nope-server" alt="last update" />
   </a>
-  <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">
-    <img src="https://img.shields.io/github/issues/Louis3797/express-ts-auth-service" alt="open issues" />
+  <a href="https://github.com/Louis3797/nope-server/issues/">
+    <img src="https://img.shields.io/github/issues/Louis3797/nope-server" alt="open issues" />
   </a>
-  <a href="https://github.com/Louis3797/express-ts-auth-service/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Louis3797/express-ts-auth-service.svg" alt="license" />
+  <a href="https://github.com/Louis3797/nope-server/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Louis3797/nope-server.svg" alt="license" />
   </a>
 </p>
 
 <h5>
-    <a href="https://github.com/Louis3797/express-ts-auth-service#readme">Dokumentation</a>
+    <a href="https://github.com/Louis3797/nope-server#readme">Dokumentation</a>
   <span> · </span>
-    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Bug melden</a>
+    <a href="https://github.com/Louis3797/nope-server/issues/">Bug melden</a>
   <span> · </span>
-    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Feature anfordern</a>
+    <a href="https://github.com/Louis3797/nope-server/issues/">Feature anfordern</a>
   </h5>
 </div>
 
