@@ -21,6 +21,12 @@ enum BracketStatus {
   FINISHED
 }
 
+enum GameStatus {
+  WAITING_FOR_MORE_USERS
+  IN_PROGRESS
+  FINISHED
+}
+
 model Player {
   id                      String                @id @default(cuid())
   username                String                @unique
@@ -38,15 +44,17 @@ model Player {
   gameMoveHistory         Move[]                @relation(name: "MoveToPlayer")
 }
 
+// ! At active game status that shows if the game is running or if the game is waiting for more user to join
 model Game {
-  id        String    @id @default(cuid())
-  gameMode  GameMode  @default(NORMAL)
-  createdAt DateTime  @default(now())
+  id        String     @id @default(cuid())
+  gameMode  GameMode   @default(NORMAL)
+  createdAt DateTime   @default(now())
   endedAt   DateTime?
-  player    Player[]  @relation(name: "PlayerToGame")
-  bracket   Bracket?  @relation(name: "BracketToGame", fields: [bracketId], references: [id])
+  status    GameStatus
+  player    Player[]   @relation(name: "PlayerToGame")
+  bracket   Bracket?   @relation(name: "BracketToGame", fields: [bracketId], references: [id])
   bracketId String?
-  moves     Move[]    @relation(name: "MoveToGame")
+  moves     Move[]     @relation(name: "MoveToGame")
 }
 
 model Tournament {
@@ -96,6 +104,6 @@ model Move {
   game      Game     @relation(name: "MoveToGame", fields: [gameId], references: [id])
   gameId    String
   action    String   @db.VarChar(256)
-  reason    String   @db.VarChar(256)
+  reason    String?  @db.VarChar(256)
   compliant Boolean  @default(true)
 }
