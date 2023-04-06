@@ -19,48 +19,47 @@
 </p>
 
 <h5>
-    <a href="https://github.com/Louis3797/express-ts-auth-service#readme">Documentation</a>
+    <a href="https://github.com/Louis3797/express-ts-auth-service#readme">Dokumentation</a>
   <span> · </span>
-    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Report Bug</a>
+    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Bug melden</a>
   <span> · </span>
-    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Request Feature</a>
+    <a href="https://github.com/Louis3797/express-ts-auth-service/issues/">Feature anfordern</a>
   </h5>
 </div>
 
 <!-- Table of Contents -->
 
-# Table of Contents
+# Inhaltsübersicht
 
-- [Table of Contents](#table-of-contents)
-  - [About the Project](#about-the-project)
+- [Inhaltsübersicht](#inhaltsübersicht)
+  - [Über das Projekt](#über-das-projekt)
     - [Tech Stack](#tech-stack)
     - [Endpoints](#endpoints)
       - [Rest API](#rest-api)
       - [Socket.io](#socketio)
-    - [Integrate server into client](#integrate-server-into-client)
-    - [Project Structure](#project-structure)
-    - [Database](#database)
-    - [Environment Variables](#environment-variables)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
+    - [Server in Client integrieren](#server-in-client-integrieren)
+    - [Projektstruktur](#projektstruktur)
+    - [Datenbank](#datenbank)
+    - [Umgebungsvariablen](#umgebungsvariablen)
+  - [Erste Schritte](#erste-schritte)
+    - [Voraussetzungen](#voraussetzungen)
     - [Installation](#installation)
     - [Linting](#linting)
-    - [Running Tests](#running-tests)
-    - [Run Locally](#run-locally)
-    - [Run with Docker](#run-with-docker)
+    - [Tests ausführen](#tests-ausführen)
+    - [Local ausführen](#local-ausführen)
+    - [Ausführen mit Docker](#ausführen-mit-docker)
 
 <!-- About the Project -->
 
-## About the Project
+## Über das Projekt
 
-The Nope multiplayer game server is designed to facilitate online gameplay for the card game Nope. It provides both a REST API and a WebSocket connection, enabling players to compete against each other in real-time. Built using Express.js, Socket.io, and TypeScript, the server supports two different game modes: standard 2-6 player gameplay and tournament mode.
+Der Nope Multiplayer Game Server wird für die Abwicklung von Online-Spielen für das Nope-Kartenspiel verwendet. Er bietet sowohl eine REST-API als auch eine WebSocket-Verbindung und ermöglicht es Spielern, in Echtzeit gegeneinander anzutreten. Der Server wurde mit Express.js, Socket.io und TypeScript entwickelt und unterstützt zwei verschiedene Spielmodi: Standardspiel für 2-6 Spieler und Turniermodus.
 
 <!-- TechStack -->
 
 ### Tech Stack
 
 [![Technologies](https://skillicons.dev/icons?i=ts,nodejs,express,mysql,docker,prisma&perline=13)](https://skillicons.dev)
-
 
 <!-- Endpoints -->
 
@@ -82,27 +81,27 @@ POST /v1/verify-email/:token - Verify email
 
 <!-- Integrate server into client -->
 
-### Integrate server into client
+### Server in Client integrieren
 
 <!-- Project Structure -->
 
-### Project Structure
+### Projektstruktur
 
 ```txt
 .
-├── assets          # Assets for the Documentation
+├── assets          # Assets für die Dokumentation
 ├── prisma
 │   └── migrations  # Prisma Migrations
 ├── src
-│   ├── config      # Config Files
+│   ├── config      # Config Dateien
 │   ├── controller  # Controllers
 │   ├── interfaces  # Typescript Interfaces
 │   ├── middleware  # Custom Middleware
 │   ├── routes      # Routes
 │   ├── service     # Services
-│   ├── socket      # Websocket specific Code
+│   ├── socket      # Websocket spezifischer Code
 │   ├── types       # Typescript Types
-│   ├── utils       # Utility Classes and Functions 
+│   ├── utils       # Utility Klassen und Funktionen
 │   └── validations # Validation Schemas
 │   └── app.ts      # Express App
 │   └── index.ts    # Server Entrypoint
@@ -113,24 +112,23 @@ POST /v1/verify-email/:token - Verify email
 
 <!-- Database -->
 
+### Datenbank
 
-### Database
+Unser Server nutzt MySQL als primäres Datenbankmanagementsystem zur Speicherung und Verwaltung aller relevanten Daten. MySQL ist ein beliebtes und weit verbreitetes relationales Open-Source-Datenbanksystem, das eine effiziente, sichere und skalierbare Speicherung und Abfrage von Daten ermöglicht.
 
-Our server relies on MySQL as its primary database management system to store and manage all relevant data. MySQL is a popular and widely used open-source relational database system that provides efficient, secure, and scalable storage and retrieval of data.
+Um die Verwaltung der in der MySQL-Datenbank gespeicherten Daten zu vereinfachen und zu rationalisieren, setzen wir Prisma ein, ein modernes, typsicheres ORM, das verschiedene Datenbanken, darunter auch MySQL, unterstützt.
 
-To simplify and streamline the process of managing the data stored in the MySQL database, we utilize Prisma, which is a modern, type-safe ORM that supports various databases, including MySQL.
+Prisma hilft uns, Datenbankabfragen in einer besser lesbaren und intuitiven Weise zu schreiben, was die Verwaltung der in unserer MySQL-Datenbank gespeicherten Daten erleichtert. Durch den Einsatz von Prisma als ORM unserer Wahl können wir außerdem sicherstellen, dass unsere Anwendung skalierbar, effizient und wartungsfreundlich bleibt.
 
-Prisma helps us to write database queries in a more readable and intuitive way, making it easier to manage the data stored in our MySQL database. By using Prisma as our ORM of choice, we can also ensure that our application remains scalable, efficient, and maintainable.
+Wenn Sie sich für die Struktur unserer Datenbank interessieren, können Sie einen Blick auf das unten dargestellte Datenmodell werfen, das einen Überblick über die Tabellen, Spalten und Beziehungen innerhalb der Datenbank gibt.
 
-If you're interested in the structure of our database, you can take a look at the data model presented below, which provides an overview of the tables, columns, and relationships within the database.
-
-![ERD](http://via.placeholder.com/640x360)
+![ERD](assets/mysql_erd.png)
 
 <!-- Env Variables -->
 
-### Environment Variables
+### Umgebungsvariablen
 
-To run this project, you will need to add the following environment variables to your .env file
+Um dieses Projekt auszuführen, müssen Sie die folgenden Umgebungsvariablen zu Ihrer .env-Datei hinzufügen
 
 ```yml
 # App's running port
@@ -156,17 +154,17 @@ MYSQL_PORT=
 DATABASE_URL=
 ```
 
-See .env.example for further details
+Siehe .env.example für weitere Details
 
 <!-- Getting Started -->
 
-## Getting Started
+## Erste Schritte
 
 <!-- Prerequisites -->
 
-### Prerequisites
+### Voraussetzungen
 
-This project uses Yarn as package manager
+Dieses Projekt nutzt Yarn als Packetmanager
 
 ```bash
  npm install --global yarn
@@ -182,6 +180,10 @@ This project uses Yarn as package manager
   cd <name>
 
   yarn install # install dependencies
+
+  yarn husky install
+
+  yarn prisma:gen
 ```
 
 ### Linting
@@ -198,28 +200,25 @@ This project uses Yarn as package manager
 
   # fix prettier errors
   yarn prettier:format
-
-  # fix prettier errors in specific file
-  yarn prettier:format:file <file-name>
 ```
 
 <!-- Running Tests -->
 
-### Running Tests
+### Tests ausführen
 
-To run tests, run the following command
+Die Tests lassen sich mit folgenden Befehl ausführen
 
 ```bash
   yarn test
 ```
 
-Run tests with watch flag
+Um die Tests mit der --watch flag laufen zu lassen kann man dieses Script verwenden
 
 ```bash
   yarn test:watch
 ```
 
-See test coverage
+Testabdeckung anzeigen lassen
 
 ```bash
   yarn coverage
@@ -227,19 +226,19 @@ See test coverage
 
 <!-- Run Locally -->
 
-### Run Locally
+### Local ausführen
 
-Start the server in development mode
+Starten des Servers im Entwicklungsmodus
 
-> Note: Don't forget to define the .env variables
+> Hinweis: Vergessen Sie nicht, die .env-Variablen zu definieren.
 
-> In case MySQL is not installed on your computer, you can set up a running environment locally by running the server using [Docker Compose](#run-with-docker).
+> Falls MySQL nicht auf Ihrem Computer installiert ist, können Sie lokal eine laufende Umgebung einrichten, indem Sie den Server mit [Docker Compose](#ausführen-mit-docker) ausführen.
 
 ```bash
   yarn dev
 ```
 
-Start the server in production mode
+Starten des Servers im Produktionsmodus
 
 ```bash
   yarn start
@@ -247,21 +246,23 @@ Start the server in production mode
 
 <!-- Run with Docker -->
 
-### Run with Docker
+### Ausführen mit Docker
 
-Build Image out of Dockerfile
+Image aus Dockerfile erstellen
+
 ```bash
   docker build -t <image-name> .
 ```
 
-> Use the --target flag to only build to a specific stage in the Dockerfile
+> Verwende die --target Flag, um nur bis zu einer bestimmten Stufe in der Dockerdatei zu bauen.
 
-Run Docker Image as Container 
+Docker-Image als Container ausführen
+
 ```bash
   docker run --name <container-name> -p <exposed-port>:<port> <image-name>
 ```
 
-Start Server and MySQL environment with docker compose
+Server und MySQL-Umgebung mit docker compose starten
 
 ```bash
   docker-compose up

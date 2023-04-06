@@ -182,6 +182,10 @@ This project uses Yarn as package manager
   cd <name>
 
   yarn install # install dependencies
+
+  yarn husky install
+
+  yarn prisma:gen
 ```
 
 ### Linting
@@ -198,9 +202,6 @@ This project uses Yarn as package manager
 
   # fix prettier errors
   yarn prettier:format
-
-  # fix prettier errors in specific file
-  yarn prettier:format:file <file-name>
 ```
 
 <!-- Running Tests -->
