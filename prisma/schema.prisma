@@ -10,9 +10,76 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  password  String
-  createdAt DateTime @default(now())
+enum GameMode {
+  NORMAL
+  TOURNAMENT
+}
+
+enum BracketStatus {
+  PENDING
+  IN_PROGRESS
+  FINISHED
+}
+
+model Player {
+  id                      String                @id @default(cuid())
+  name                    String                @unique
+  createdAt               DateTime              @default(now())
+  password                String
+  gamesWon                Int                   @default(0)
+  gamesPlayed             Int                   @default(0)
+  playedGames             Game[]                @relation(name: "PlayerToGame")
+  tournaments             Tournament[]          @relation(name: "PlayerToTournament")
+  won_tournament_brackets Bracket[]             @relation(name: "Bracket_Winner_To_User")
+  tournament_brackets     Bracket[]             @relation(name: "Bracket_To_User")
+  tournamentStatistic     TournamentStatistic[] @relation(name: "PlayerToTournamentStatistic")
+}
+
+model Game {
+  id        String    @id @default(cuid())
+  gameMode  GameMode  @default(NORMAL)
+  createdAt DateTime  @default(now())
+  endedAt   DateTime?
+  player    Player[]  @relation(name: "PlayerToGame")
+  bracket   Bracket?  @relation(name: "BracketToGame", fields: [bracketId], references: [id])
+  bracketId String?
+}
+
+model Tournament {
+  id                  String                @id @default(cuid())
+  name                String                @unique
+  createdAt           DateTime              @default(now())
+  endedAt             DateTime?
+  isCompleted         Boolean               @default(false)
+  players             Player[]              @relation(name: "PlayerToTournament")
+  brackets            Bracket[]             @relation(name: "BracketToTournament")
+  tournamentStatistic TournamentStatistic[] @relation(name: "TournamentToTournamentStatistic")
+}
+
+model Bracket {
+  id        String        @id @default(cuid())
+  round     Int
+  status    BracketStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+
+  Tournament   Tournament @relation(name: "BracketToTournament", fields: [tournamentId], references: [id])
+  tournamentId String
+  games        Game[]     @relation(name: "BracketToGame")
+
+  winner   Player? @relation("Bracket_Winner_To_User", fields: [winnerId], references: [id])
+  winnerId String?
+
+  opponents Player[] @relation(name: "Bracket_To_User")
+}
+
+model TournamentStatistic {
+  id            String     @id @default(cuid())
+  player        Player     @relation(name: "PlayerToTournamentStatistic", fields: [playerId], references: [id])
+  playerId      String
+  tournament    Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id])
+  tournamentId  String
+  gamesPlayed   Int        @default(0)
+  wins          Int        @default(0)
+  losses        Int        @default(0)
+  winPercentage Float      @default(0)
 }
