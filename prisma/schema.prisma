@@ -52,7 +52,7 @@ model Game {
   status    GameStatus
   roomSize  Int // Limits how many players can join the game
   private   Boolean    @default(false)
-  player    Player[]   @relation(name: "PlayerToGame")
+  players   Player[]   @relation(name: "PlayerToGame")
   bracket   Bracket?   @relation(name: "BracketToGame", fields: [bracketId], references: [id])
   bracketId String?
   moves     Move[]     @relation(name: "MoveToGame")
