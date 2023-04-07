@@ -50,7 +50,7 @@ model Game {
   createdAt DateTime   @default(now())
   endedAt   DateTime?
   status    GameStatus
-  maxPlayer Int
+  roomSize  Int // Limits how many players can join the game
   private   Boolean    @default(false)
   player    Player[]   @relation(name: "PlayerToGame")
   bracket   Bracket?   @relation(name: "BracketToGame", fields: [bracketId], references: [id])
