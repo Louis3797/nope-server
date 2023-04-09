@@ -50,14 +50,6 @@ export interface UserSignUpCredentials {
 
 export type UserLoginCredentials = Omit<UserSignUpCredentials, 'username'>;
 
-export interface EmailRequestBody {
-  email: string;
-}
-
-export interface ResetPasswordRequestBodyType {
-  newPassword: string;
-}
-
 export type Sanitized<T> = T extends (...args: unknown[]) => unknown
   ? T // if T is a function, return it as is
   : T extends object
@@ -69,3 +61,21 @@ export type Sanitized<T> = T extends (...args: unknown[]) => unknown
 export type SanitizeOptions = IFilterXSSOptions & {
   whiteList?: IFilterXSSOptions['whiteList'];
 };
+
+export type SocketCallback<T> = (
+  error?: Error | null,
+  response?: SocketResponse<T>
+) => void;
+
+export interface SocketResponse<T> {
+  success: boolean;
+  data?: T;
+  error?:
+    | Array<{
+        message: string;
+      }>
+    | {
+        message: string;
+      }
+    | null;
+}
