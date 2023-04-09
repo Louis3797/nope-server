@@ -9,6 +9,7 @@ import config from './config/config';
 import { xssMiddleware } from './middleware/xssMiddleware';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { gameQueueHandler, gameRoomHandler, tournamentHandler } from './socket';
 
 const app: Express = express();
 const server = createServer(app);
@@ -42,14 +43,15 @@ app.use(
   })
 );
 
-io.on('connection', (socket) => {
-  console.log('A user connected, socket id: ' + socket.id);
+// Initialize Socket.io namespaces and event handlers
+const gameQueueNamespace = io.of('/game-queue');
+gameQueueNamespace.on('connection', gameQueueHandler(io));
 
-  // Handle disconnect event
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
-  });
-});
+const gameRoomNamespace = io.of('/game-room');
+gameRoomNamespace.on('connection', gameRoomHandler(io));
+
+const tournamentNamespace = io.of('/tournament');
+tournamentNamespace.on('connection', tournamentHandler(io));
 
 app.all('*', (_req, res) => {
   res.status(404).json({ error: '404 Not Found' });
