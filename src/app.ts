@@ -44,6 +44,7 @@ app.use(
 );
 
 // Initialize Socket.io namespaces and event handlers
+// Todo make Namespace types strict
 const gameQueueNamespace = io.of('/game-queue');
 gameQueueNamespace.on('connection', gameQueueHandler(io));
 
