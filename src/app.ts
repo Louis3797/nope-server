@@ -9,6 +9,8 @@ import config from './config/config';
 import { xssMiddleware } from './middleware/xssMiddleware';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { authRouter } from './routes';
+import authLimiter from './middleware/authLimiter';
 
 const app: Express = express();
 const server = createServer(app);
@@ -41,6 +43,8 @@ app.use(
     credentials: true
   })
 );
+
+app.use('/auth', authLimiter, authRouter);
 
 io.on('connection', (socket) => {
   console.log('A user connected, socket id: ' + socket.id);

@@ -24,7 +24,6 @@
   </h5>
 </div>
 
-
 <!-- Table of Contents -->
 
 # Table of Contents
@@ -58,7 +57,6 @@ The Nope Multiplayer Game Server is used to handle online gameplay for the Nope 
 ### Tech Stack
 
 [![Technologies](https://skillicons.dev/icons?i=ts,nodejs,express,mysql,docker,prisma&perline=13)](https://skillicons.dev)
-
 
 <!-- Endpoints -->
 
@@ -100,7 +98,7 @@ POST /v1/verify-email/:token - Verify email
 │   ├── service     # Services
 │   ├── socket      # Websocket specific Code
 │   ├── types       # Typescript Types
-│   ├── utils       # Utility Classes and Functions 
+│   ├── utils       # Utility Classes and Functions
 │   └── validations # Validation Schemas
 │   └── app.ts      # Express App
 │   └── index.ts    # Server Entrypoint
@@ -110,7 +108,6 @@ POST /v1/verify-email/:token - Verify email
 ```
 
 <!-- Database -->
-
 
 ### Database
 
@@ -135,7 +132,7 @@ To run this project, you will need to add the following environment variables to
 PORT=
 
 # Cors origin url
-# Example: https://example.com or for multiple origins 
+# Example: https://example.com or for multiple origins
 # https://example.com|https://example2.com|https://example3.com or simple * to allow all origins
 CORS_ORIGIN=
 
@@ -185,7 +182,7 @@ This project uses Yarn as package manager
 
   yarn husky install
 
-  yarn prisma migrate dev --name init 
+  yarn prisma migrate dev --name init
 
   yarn prisma:gen
 ```
@@ -253,13 +250,15 @@ Start the server in production mode
 ### Run with Docker
 
 Build Image out of Dockerfile
+
 ```bash
   docker build -t <image-name> .
 ```
 
 > Use the --target flag to only build to a specific stage in the Dockerfile
 
-Run Docker Image as Container 
+Run Docker Image as Container
+
 ```bash
   docker run --name <container-name> -p <exposed-port>:<port> <image-name>
 ```
