@@ -132,7 +132,7 @@ Um dieses Projekt auszuführen, müssen Sie die folgenden Umgebungsvariablen zu 
 PORT=
 
 # Cors origin url
-# Example: https://example.com or for multiple origins 
+# Example: https://example.com or for multiple origins
 # https://example.com|https://example2.com|https://example3.com or simple * to allow all origins
 CORS_ORIGIN=
 
@@ -182,7 +182,7 @@ Dieses Projekt nutzt Yarn als Packetmanager
 
   yarn husky install
 
-  yarn prisma migrate dev --name init 
+  yarn prisma migrate dev --name init
 
   yarn prisma:gen
 ```

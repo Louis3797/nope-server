@@ -3,14 +3,14 @@ version: '3.9'
 services:
   # Express Server
   nope-server:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       target: production
     image: nope-server:latest
     container_name: nope-server
     ports:
-    - '${PORT}:${PORT}' 
+      - '${PORT}:${PORT}'
     env_file:
       - ./.env
     environment:
@@ -21,7 +21,7 @@ services:
     depends_on:
       - mysql
     restart: unless-stopped
-    command: ["dumb-init", "node", "dist/index.js"]
+    command: ['dumb-init', 'node', 'dist/index.js']
 
   # MySQL Database
   mysql:
