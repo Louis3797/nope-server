@@ -8,7 +8,7 @@ import type {
 } from '../types/types';
 import config from '../config/config';
 import jwt from 'jsonwebtoken';
-import { createPlayer, getPlayerByName } from 'src/service/player.service';
+import { createPlayer, getPlayerByName } from '../service/player.service';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
