@@ -1,7 +1,6 @@
 import type { Response } from 'express';
 import httpStatus from 'http-status';
 import * as argon2 from 'argon2';
-import prismaClient from '../config/prisma';
 import type {
   TypedRequest,
   UserLoginCredentials,
@@ -9,6 +8,7 @@ import type {
 } from '../types/types';
 import config from '../config/config';
 import jwt from 'jsonwebtoken';
+import { createPlayer, getPlayerByName } from 'src/service/player.service';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
@@ -26,27 +26,16 @@ export const handleRegister = async (
     });
   }
 
-  const checkUsername = await prismaClient.player.findUnique({
-    where: {
-      username
-    }
-  });
+  const checkUsername = await getPlayerByName(username);
 
   if (checkUsername) return res.sendStatus(httpStatus.CONFLICT); // username is already in db
 
   try {
     const hashedPassword = await argon2.hash(password);
 
-    await prismaClient.player.create({
-      data: {
-        username,
-        firstname,
-        lastname,
-        password: hashedPassword
-      }
-    });
+    await createPlayer(username, firstname, lastname, hashedPassword);
 
-    res.status(httpStatus.CREATED).json({ message: 'New user created' });
+    res.status(httpStatus.CREATED).json({ message: 'New player created' });
   } catch (err) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -64,11 +53,7 @@ export const handleLogin = async (
       .json({ message: 'Username and password are required!' });
   }
 
-  const user = await prismaClient.player.findUnique({
-    where: {
-      username
-    }
-  });
+  const user = await getPlayerByName(username);
 
   if (!user) return res.sendStatus(httpStatus.UNAUTHORIZED);
 
