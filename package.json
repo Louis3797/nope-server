@@ -34,7 +34,7 @@
     "eslint": "^8.38.0",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
-    "helmet": "^6.1.2",
+    "helmet": "^6.1.5",
     "http-status": "^1.6.2",
     "joi": "^17.8.4",
     "jsonwebtoken": "^9.0.0",
