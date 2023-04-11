@@ -38,7 +38,7 @@ Um mit dem Projekt zu beginnen, befolgen Sie diese Schritte:
 
   yarn husky install
 
-  yarn prisma migrate dev --name init 
+  yarn prisma migrate dev --name init
 
   yarn prisma:gen
 ```
@@ -103,12 +103,11 @@ Dieses Projekt verwendet ESLint und Prettier, um sicherzustellen, dass der Code 
 
 ### Comments
 
-- Verfassen Sie Kommentare auf Englisch. 
+- Verfassen Sie Kommentare auf Englisch.
 - Verwenden Sie Codekommentare, um komplexe Logik oder Funktionen zu erklären.
 - Kommentieren Sie jeden Code, der nicht sofort offensichtlich oder selbsterklärend ist.
 - Vermeiden Sie Kommentare, die einfach wiederholen, was der Code tut. Konzentrieren Sie sich stattdessen darauf, zu erklären, warum der Code tut, was er tut.
 - Halten Sie Ihre Kommentare auf dem neuesten Stand mit dem Code. Wenn Sie den Code ändern, aktualisieren Sie auch die Kommentare.
-
 
 ## ORM und Datenbank
 
