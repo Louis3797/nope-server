@@ -44,7 +44,7 @@ app.use(
   })
 );
 
-app.use('/auth', authLimiter, authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 
 io.on('connection', (socket) => {
   console.log('A user connected, socket id: ' + socket.id);

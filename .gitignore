@@ -8,3 +8,4 @@ coverage/
 data
 .DS_Store
 prisma/migrations/
+prisma/DigiCertGlobalRootCA.crt.pem
