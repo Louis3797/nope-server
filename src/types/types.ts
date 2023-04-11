@@ -42,21 +42,17 @@ export type ExpressMiddleware<
 //   /* strongly typed `req.body`. yay autocomplete 🎉 */
 //   res.json({ message: 'you have signed up' }) // strongly typed response obj
 // };
-export interface UserSignUpCredentials {
+export interface UserRegisterCredentials {
   username: string;
-  email: string;
+  firstname: string;
+  lastname: string;
   password: string;
 }
 
-export type UserLoginCredentials = Omit<UserSignUpCredentials, 'username'>;
-
-export interface EmailRequestBody {
-  email: string;
-}
-
-export interface ResetPasswordRequestBodyType {
-  newPassword: string;
-}
+export type UserLoginCredentials = Omit<
+  UserRegisterCredentials,
+  'firstname' | 'lastname'
+>;
 
 export type Sanitized<T> = T extends (...args: unknown[]) => unknown
   ? T // if T is a function, return it as is
