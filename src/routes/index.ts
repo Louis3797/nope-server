@@ -1,3 +1,3 @@
-import * as authRouter from './auth.route';
+import authRouter from './auth.route';
 
 export { authRouter };

@@ -34,7 +34,7 @@ const config = {
   jwt: {
     access_token: {
       secret: validatedEnv.ACCESS_TOKEN_SECRET,
-      expire: validatedEnv.ACCESS_TOKEN_EXPIRE
+      expiresIn: validatedEnv.ACCESS_TOKEN_EXPIRE
     }
   },
   cors: {

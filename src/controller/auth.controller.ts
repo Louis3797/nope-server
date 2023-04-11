@@ -7,6 +7,12 @@ import type {
   UserLoginCredentials,
   UserRegisterCredentials
 } from '../types/types';
+import config from '../config/config';
+import jwt from 'jsonwebtoken';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const { sign } = jwt;
 
 export const handleRegister = async (
   req: TypedRequest<UserRegisterCredentials>,
@@ -47,12 +53,42 @@ export const handleRegister = async (
 };
 
 export const handleLogin = async (
-  _req: TypedRequest<UserLoginCredentials>,
+  req: TypedRequest<UserLoginCredentials>,
   res: Response
 ) => {
-  res.sendStatus(httpStatus.OK);
-};
+  const { username, password } = req.body;
 
-export const handleLogout = async (_req: TypedRequest, res: Response) => {
-  res.sendStatus(httpStatus.OK);
+  if (!username || !password) {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: 'Username and password are required!' });
+  }
+
+  const user = await prismaClient.player.findUnique({
+    where: {
+      username
+    }
+  });
+
+  if (!user) return res.sendStatus(httpStatus.UNAUTHORIZED);
+
+  // check password
+  try {
+    if (await argon2.verify(user.password, password)) {
+      const accessToken = sign(
+        { username: user.username, userID: user.id },
+        config.jwt.access_token.secret,
+        {
+          expiresIn: config.jwt.access_token.expiresIn
+        }
+      );
+
+      // send access token per json to user so it can be stored in the localStorage
+      return res.json({ accessToken });
+    } else {
+      return res.status(httpStatus.UNAUTHORIZED);
+    }
+  } catch (err) {
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR);
+  }
 };
