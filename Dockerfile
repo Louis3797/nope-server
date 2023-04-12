@@ -57,6 +57,7 @@ COPY --chown=nodejs:nodejs --from=build /app/prisma ./prisma
 
 ENV NODE_ENV=production
 ENV PORT=4040
+ENV HOST=0.0.0.0
 
 # Generate prisma client
 RUN yarn prisma generate
