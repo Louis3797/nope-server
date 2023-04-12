@@ -1,16 +1,21 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 import Joi from 'joi';
-import { type DeepReadonly } from 'utility-types';
 
 dotenv.config({
-  path: path.resolve(__dirname, '../../.env')
+  path: path.resolve(
+    __dirname,
+    '../../.env' + (process.env.NODE_ENV !== 'production' ? '.local' : '')
+  )
 });
 
 const envSchema = Joi.object().keys({
   NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
   PORT: Joi.number().port().required().default(4000),
-  CORS_ORIGIN: Joi.string().required().default('*')
+  HOST: Joi.string().required(),
+  CORS_ORIGIN: Joi.string().required().default('*'),
+  ACCESS_TOKEN_SECRET: Joi.string().min(8).required(),
+  ACCESS_TOKEN_EXPIRE: Joi.string().required().default('1d')
 });
 
 const { value: validatedEnv, error } = envSchema
@@ -25,22 +30,21 @@ if (error) {
   );
 }
 
-const config: DeepReadonly<{
-  node_env: 'production' | 'development' | 'test';
-  app: {
-    port: number;
-  };
-  cors: {
-    origin: string;
-  };
-}> = {
+const config = {
   node_env: validatedEnv.NODE_ENV,
   app: {
-    port: validatedEnv.PORT
+    port: validatedEnv.PORT,
+    host: validatedEnv.HOST
+  },
+  jwt: {
+    access_token: {
+      secret: validatedEnv.ACCESS_TOKEN_SECRET,
+      expiresIn: validatedEnv.ACCESS_TOKEN_EXPIRE
+    }
   },
   cors: {
     origin: validatedEnv.CORS_ORIGIN
   }
-};
+} as const;
 
 export default config;

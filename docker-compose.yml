@@ -3,16 +3,15 @@ version: '3.9'
 services:
   # Express Server
   nope-server:
-    build: 
+    build:
       context: .
-      dockerfile: Dockerfile
-      target: production
-    image: nope-server:latest
+      dockerfile: Dockerfile      
+    image: nope-server
     container_name: nope-server
     ports:
-    - '${PORT}:${PORT}' 
+      - '${PORT}:${PORT}'
     env_file:
-      - ./.env
+      - ./.env.local
     environment:
       NODE_ENV: production
       DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:${MYSQL_PORT}/${MYSQL_DATABASE}
@@ -21,7 +20,7 @@ services:
     depends_on:
       - mysql
     restart: unless-stopped
-    command: ["dumb-init", "node", "dist/index.js"]
+    command: ['dumb-init', 'node', 'dist/index.js']
 
   # MySQL Database
   mysql:
@@ -38,7 +37,7 @@ services:
       MYSQL_USER: root
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     env_file:
-      - ./.env
+      - ./.env.local
     restart: always
 volumes:
   db-data:

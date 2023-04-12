@@ -10,6 +10,8 @@ import { xssMiddleware } from './middleware/xssMiddleware';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { gameQueueHandler, gameRoomHandler, tournamentHandler } from './socket';
+import { authRouter } from './routes';
+import authLimiter from './middleware/authLimiter';
 
 const app: Express = express();
 const server = createServer(app);
@@ -42,6 +44,7 @@ app.use(
     credentials: true
   })
 );
+app.use('/api/auth', authLimiter, authRouter);
 
 // Initialize Socket.io namespaces and event handlers
 // Todo make Namespace types strict

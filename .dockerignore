@@ -2,3 +2,6 @@ node_modules
 yarn-error.log
 coverage
 .env
+Dockerfile
+prisma/migrations/
+prisma/DigiCertGlobalRootCA.crt.pem
