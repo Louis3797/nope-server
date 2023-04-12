@@ -2,7 +2,7 @@ import server from './app';
 import config from './config/config';
 import logger from './middleware/logger';
 
-const port: number = config.app.port;
+const port: number = config.app.port || 4040;
 
 server.listen(port, () => {
   logger.log('info', `Server is running on Port: ${port}`);
