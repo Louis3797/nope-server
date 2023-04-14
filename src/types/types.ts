@@ -54,6 +54,10 @@ export type UserLoginCredentials = Omit<
   'firstname' | 'lastname'
 >;
 
+export interface VerifyTokenCredentials {
+  token: string;
+}
+
 export type Sanitized<T> = T extends (...args: unknown[]) => unknown
   ? T // if T is a function, return it as is
   : T extends object
@@ -82,4 +86,11 @@ export interface SocketResponse<T> {
         message: string;
       }
     | null;
+}
+
+export interface SocketData {
+  user: {
+    username: string;
+    id: string;
+  };
 }

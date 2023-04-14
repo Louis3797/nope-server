@@ -10,9 +10,9 @@ import { xssMiddleware } from './middleware/xssMiddleware';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { gameQueueHandler, gameRoomHandler, tournamentHandler } from './socket';
-import { authRouter } from './routes';
+import { authRouter, tokenRouter } from './routes';
 import authLimiter from './middleware/authLimiter';
-
+import isAuthSocket from './middleware/socket/isAuthSocket';
 const app: Express = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -40,11 +40,14 @@ app.use(compression({ filter: compressFilter }));
 app.use(
   cors({
     // origin is given a array if we want to have multiple origins later
-    origin: String(config.cors.origin).split('|'),
+    // origin: String(config.cors.origin).split('|'),
+    origin: '*',
     credentials: true
   })
 );
 app.use('/api/auth', authLimiter, authRouter);
+
+app.use('/api', tokenRouter);
 
 // Initialize Socket.io namespaces and event handlers
 // Todo make Namespace types strict
@@ -52,7 +55,7 @@ const gameQueueNamespace = io.of('/game-queue');
 gameQueueNamespace.on('connection', gameQueueHandler(io));
 
 const gameRoomNamespace = io.of('/game-room');
-gameRoomNamespace.on('connection', gameRoomHandler(io));
+gameRoomNamespace.use(isAuthSocket).on('connection', gameRoomHandler(io));
 
 const tournamentNamespace = io.of('/tournament');
 tournamentNamespace.on('connection', tournamentHandler(io));
