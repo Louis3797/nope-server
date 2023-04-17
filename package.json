@@ -46,7 +46,7 @@
     "xss": "^1.0.14"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.5.1",
+    "@commitlint/cli": "^17.6.1",
     "@commitlint/config-conventional": "^17.4.4",
     "@types/compression": "^1.7.2",
     "@types/cookie-parser": "^1.4.3",
