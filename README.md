@@ -32,8 +32,6 @@
   - [Über das Projekt](#über-das-projekt)
     - [Tech Stack](#tech-stack)
     - [Endpoints](#endpoints)
-      - [Rest API](#rest-api)
-      - [Socket.io](#socketio)
     - [Server in Client integrieren](#server-in-client-integrieren)
     - [Projektstruktur](#projektstruktur)
     - [Datenbank](#datenbank)
@@ -58,23 +56,13 @@ Der Nope Multiplayer Game Server wird für die Abwicklung von Online-Spielen fü
 
 [![Technologies](https://skillicons.dev/icons?i=ts,nodejs,express,mysql,docker,prisma&perline=13)](https://skillicons.dev)
 
+---
+
 <!-- Endpoints -->
 
 ### Endpoints
 
-#### Rest API
-
-<!-- ```
-POST /v1/auth/signup - Signup
-POST /v1/auth/login - Login
-POST /v1/auth/refresh - Refresh access token
-POST /v1/forgot-password - Send reset password email
-POST /v1/reset-password/:token - Reset password
-POST /v1/send-verification-email - Send verification email
-POST /v1/verify-email/:token - Verify email
-``` -->
-
-#### Socket.io
+See [Endpoints.md](https://github.com/Louis3797/nope-server/blob/main/Endpoints.md)
 
 <!-- Integrate server into client -->
 
