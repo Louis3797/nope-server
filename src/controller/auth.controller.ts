@@ -58,9 +58,7 @@ export const handleLogin = async (
     username: true,
     firstname: true,
     lastname: true,
-    password: true,
-    gamesWon: true,
-    gamesPlayed: true
+    password: true
   });
 
   if (!user) return res.sendStatus(httpStatus.UNAUTHORIZED);
