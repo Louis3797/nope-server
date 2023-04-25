@@ -1,7 +1,6 @@
 import { type Socket } from 'socket.io';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import config from '../../config/config';
-import { type ExtendedError } from 'socket.io/dist/namespace';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
@@ -9,7 +8,7 @@ const { verify } = jwt;
 
 const isAuthSocket = (
   socket: Socket,
-  next: (err?: ExtendedError | undefined) => void
+  next: (err?: Error | undefined) => void
 ) => {
   // get the JWT from the Socket.IO authentication header
   const token = socket.handshake.auth.token;
@@ -23,7 +22,11 @@ const isAuthSocket = (
         next(new Error('Authentication error')); // invalid token
         return;
       }
-      socket.data.user = payload;
+
+      socket.data.user = {
+        username: payload.username,
+        id: payload.userId
+      };
 
       next();
     }
