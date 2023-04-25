@@ -1,13 +1,6 @@
 import GameError from './GameError';
-import GameNotFoundError from './GameNotFoundError';
+import NotFoundError from './NotFoundError';
 import InvalidRoomSizeError from './InvalidRoomSizeError';
-import PlayerNotFoundError from './PlayerNotFoundError';
 import RoomFullError from './RoomFullError';
 
-export {
-  GameError,
-  GameNotFoundError,
-  InvalidRoomSizeError,
-  PlayerNotFoundError,
-  RoomFullError
-};
+export { GameError, NotFoundError, InvalidRoomSizeError, RoomFullError };
