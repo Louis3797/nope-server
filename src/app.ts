@@ -296,10 +296,10 @@ io.use(isAuthSocket).on('connection', async (socket) => {
           }
         });
 
-        // Add player to tournament
-        const tournamentObj = activeTournaments.get(room.id);
+        // Add player to tournament in the map
+        const tournament = activeTournaments.get(room.id);
 
-        tournamentObj?.addPlayer({
+        tournament?.addPlayer({
           id: player.id,
           username: player.username,
           socket
