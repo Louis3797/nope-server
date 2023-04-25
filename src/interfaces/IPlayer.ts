@@ -1,9 +1,20 @@
 import { type Socket } from 'socket.io';
+import type ICard from './ICard';
 
-export default interface IPlayer {
+export interface BasicPlayer {
   id: string;
   username: string;
-  firstname: string;
-  lastname: string;
   socket: Socket;
+}
+
+// split this in basic player tournament player and game player
+export interface GamePlayer extends BasicPlayer {
+  hand: ICard[];
+  handSize: number;
+  cheated: boolean;
+}
+
+export interface TournamentPlayer extends BasicPlayer {
+  inMatch: boolean;
+  wonMatches: number;
 }

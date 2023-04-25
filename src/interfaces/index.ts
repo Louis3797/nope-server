@@ -1,12 +1,13 @@
-import type { IGameQueue, IGameQueueSocketOptions } from './IGameQueue';
-import type IPlayer from './IPlayer';
-import type { ICreateRoomOptions, IJoinRoomOptions, IRoom } from './IRoom';
+import type ICard from './ICard';
+import type IGameRoom from './IGameRoom';
+import type { BasicPlayer, GamePlayer, TournamentPlayer } from './IPlayer';
+import type { ITournamentRoom } from './ITournament';
 
 export type {
-  IGameQueue,
-  IGameQueueSocketOptions,
-  IPlayer,
-  IRoom,
-  ICreateRoomOptions,
-  IJoinRoomOptions
+  BasicPlayer,
+  GamePlayer,
+  IGameRoom,
+  ICard,
+  ITournamentRoom,
+  TournamentPlayer
 };
