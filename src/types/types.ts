@@ -69,28 +69,3 @@ export type Sanitized<T> = T extends (...args: unknown[]) => unknown
 export type SanitizeOptions = IFilterXSSOptions & {
   whiteList?: IFilterXSSOptions['whiteList'];
 };
-
-export type SocketCallback<T> = (
-  error?: Error | null,
-  response?: SocketResponse<T>
-) => void;
-
-export interface SocketResponse<T> {
-  success: boolean;
-  data?: T;
-  error?:
-    | Array<{
-        message: string;
-      }>
-    | {
-        message: string;
-      }
-    | null;
-}
-
-export interface SocketData {
-  user: {
-    username: string;
-    id: string;
-  };
-}
