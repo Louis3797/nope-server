@@ -328,6 +328,8 @@ io.on('connection', async (socket) => {
           bestOf: updatedRoomData.bestOf,
           players: updatedRoomData.players
         });
+
+        await updateAvailableTournaments();
       } catch (error) {
         logger.error(error);
         if (error instanceof Error) {
@@ -457,6 +459,8 @@ io.on('connection', async (socket) => {
         data: null,
         error: null
       });
+
+      await updateAvailableTournaments();
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
@@ -498,7 +502,7 @@ io.on('connection', async (socket) => {
       // check if tournament exists
       const tournament = await prismaClient.tournament.findUnique({
         where: { id: tournamentId },
-        select: { hostId: true, id: true, currentSize: true }
+        select: { hostId: true, id: true, currentSize: true, status: true }
       });
 
       // if tournament does not exists throw an error
@@ -506,8 +510,15 @@ io.on('connection', async (socket) => {
         throw new NotFoundError('Tournament was not found!');
       }
 
-      // check if the client that triggered the event is the host of the tournament
+      // check if the tournament already started
+      if (tournament.status !== 'WAITING_FOR_MORE_PLAYERS') {
+        throw new GameError(
+          'The tournament already started!',
+          httpStatus.CONFLICT
+        );
+      }
 
+      // check if the client that triggered the event is the host of the tournament
       // if not throw an error
       if (tournament.hostId !== user.id) {
         throw new PrivilegeError('Your not the host of this tournament!');
@@ -535,6 +546,9 @@ io.on('connection', async (socket) => {
         'tournament:status',
         'The Tournament started'
       );
+
+      // update available tournament list
+      await updateAvailableTournaments();
 
       // Todo generate matches and let the players play
     } catch (error) {
