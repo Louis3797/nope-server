@@ -81,8 +81,6 @@ Statuscode: 200
 
 ## Socket.io
 
-Wir nutzen Socket.io für alles bei dem wir echt zeit
-
 ### Client -> Server
 
 #### `tournament:create`
@@ -93,49 +91,7 @@ Erstellt ein Tunier mit den spezifizierten Optionen
 
 ```json
 {
-  "numBestOfMatches": 3 // ungerade zahlen >2
-}
-```
-
-##### Response
-
-Der Server bestätigt das Event mit einen Acknowledgment
-
-Success:
-
-```json
-{
-  "success": true,
-  "data": {
-    "tournamentId": "id",
-    "currentSize": 1,
-    "bestOf": 5 // anzahl der best of matches
-  },
-  "error": null
-}
-```
-
-Error:
-
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "message": "..."
-  }
-}
-```
-
-#### `tournament:create`
-
-Erstellt ein Tunier mit den spezifizierten Optionen
-
-##### Payload
-
-```json
-{
-  "numBestOfMatches": 5 // ungerade zahlen >2
+  "numBestOfMatches": 3 // ungerade zahlen, n > 2 und n < 8
 }
 ```
 
@@ -247,6 +203,37 @@ Error:
 }
 ```
 
+#### `tournament:start`
+
+Lässt den Spieler das Tunier in dem er sich aufhält starten
+
+> Kann nur vom Host des Tuniers veranlasst werden
+
+##### Response
+
+Der Server bestätigt das Event mit einen Acknowledgment
+
+Success:
+
+```json
+{
+  "success": true,
+  "data": null,
+  "error": null
+}
+```
+
+Error:
+
+````json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "message": "..."
+  }
+}
+
 ### Server -> Client
 
 #### `list:tournaments`
@@ -288,7 +275,7 @@ Schickt allen Client die mit dem Socket.io Server verbunden sind updated über d
     ...
   ]
 }
-```
+````
 
 #### `tournament:playerInfo`
 
