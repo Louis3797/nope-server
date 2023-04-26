@@ -7,7 +7,7 @@ import type {
   UserRegisterCredentials
 } from '../types/types';
 import config from '../config/config';
-import jwt from 'jsonwebtoken';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { createPlayer, getPlayerByName } from '../service/player.service';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -53,7 +53,13 @@ export const handleLogin = async (
       .json({ message: 'Username and password are required!' });
   }
 
-  const user = await getPlayerByName(username);
+  const user = await getPlayerByName(username, {
+    id: true,
+    username: true,
+    firstname: true,
+    lastname: true,
+    password: true
+  });
 
   if (!user) return res.sendStatus(httpStatus.UNAUTHORIZED);
 
@@ -61,7 +67,7 @@ export const handleLogin = async (
   try {
     if (await argon2.verify(user.password, password)) {
       const accessToken = sign(
-        { username: user.username, userID: user.id },
+        { username: user.username, userId: user.id } as JwtPayload,
         config.jwt.access_token.secret,
         {
           expiresIn: config.jwt.access_token.expiresIn
@@ -69,7 +75,8 @@ export const handleLogin = async (
       );
 
       // send access token per json to user so it can be stored in the localStorage
-      return res.json({ accessToken });
+      const { password: userPassword, ...userData } = user;
+      return res.json({ accessToken, user: userData });
     } else {
       return res.status(httpStatus.UNAUTHORIZED);
     }
