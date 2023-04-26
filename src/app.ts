@@ -15,7 +15,13 @@ import isAuthSocket from './middleware/socket/isAuthSocket';
 import logger from './middleware/logger';
 import TournamentRoom from './model/TournamentRoom';
 import prismaClient from './config/prisma';
-import { GameError, NotFoundError } from './error';
+import {
+  GameError,
+  InvalidParticipantsError,
+  NotFoundError,
+  PrivilegeError,
+  SocketDataNotDefinedError
+} from './error';
 import { playerService } from './service';
 import type {
   ClientToServerEvents,
@@ -449,6 +455,85 @@ io.use(isAuthSocket).on('connection', async (socket) => {
         data: null,
         error: null
       });
+    } catch (error) {
+      logger.error(error);
+      if (error instanceof Error) {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: error.message
+          }
+        });
+      } else {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: 'An unknown error occurred'
+          }
+        });
+      }
+    }
+  });
+
+  socket.on('tournament:start', async (callback) => {
+    try {
+      const { tournamentId, user } = socket.data;
+
+      if (!tournamentId) {
+        throw new SocketDataNotDefinedError(
+          'Tournament id in is not defined in your Socket!'
+        );
+      }
+
+      if (!user) {
+        throw new SocketDataNotDefinedError(
+          'User in is not defined in your Socket!'
+        );
+      }
+
+      // check if tournament exists
+      const tournament = await prismaClient.tournament.findUnique({
+        where: { id: tournamentId },
+        select: { hostId: true, id: true, currentSize: true }
+      });
+
+      // if tournament does not exists throw an error
+      if (!tournament) {
+        throw new NotFoundError('Tournament was not found!');
+      }
+
+      // check if the client that triggered the event is the host of the tournament
+
+      // if not throw an error
+      if (tournament.hostId !== user.id) {
+        throw new PrivilegeError('Your not the host of this tournament!');
+      }
+
+      // check if their are minimal 2 players in the tournament
+      if (tournament.currentSize < 2) {
+        throw new InvalidParticipantsError(
+          'To start the Tournament their must be a minimum of 2 Participants!'
+        );
+      }
+
+      // update db state
+      await prismaClient.tournament.update({
+        where: { id: tournamentId },
+        data: { status: 'IN_PROGRESS' }
+      });
+
+      activeTournaments.get(tournamentId)?.start();
+
+      callback({ success: true, data: null, error: null });
+
+      // emit to all clients in the tournament that the tournament starts
+      socket
+        .to(`tournament:${tournamentId}`)
+        .emit('tournament:status', 'The Tournament started');
+
+      // Todo generate matches and let the players play
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
