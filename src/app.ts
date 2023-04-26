@@ -97,7 +97,7 @@ io.use(isAuthSocket);
 io.on('connection', async (socket) => {
   logger.info(`A new client with socket id: ${socket.id} connected`);
 
-  socket.emit(
+  io.emit(
     'list:tournaments',
     await prismaClient.tournament.findMany({
       where: {
@@ -321,7 +321,7 @@ io.on('connection', async (socket) => {
         await socket.join(`tournament:${tournamentId}`);
 
         // Emit event to all clients in the room to notify them of the new player
-        socket.to(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
+        io.in(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
           message: `${player.username} has joined the tournament`,
           tournamentId: updatedRoomData.id,
           currentSize: updatedRoomData.currentSize,
@@ -531,9 +531,10 @@ io.on('connection', async (socket) => {
       callback({ success: true, data: null, error: null });
 
       // emit to all clients in the tournament that the tournament starts
-      socket
-        .to(`tournament:${tournamentId}`)
-        .emit('tournament:status', 'The Tournament started');
+      io.in(`tournament:${tournamentId}`).emit(
+        'tournament:status',
+        'The Tournament started'
+      );
 
       // Todo generate matches and let the players play
     } catch (error) {
