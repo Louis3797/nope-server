@@ -35,8 +35,6 @@ model Player {
   lastname               String
   createdAt              DateTime              @default(now())
   password               String
-  gamesWon               Int                   @default(0)
-  gamesPlayed            Int                   @default(0)
   playedGames            Game[]                @relation(name: "PlayerToGame")
   tournaments            Tournament[]          @relation(name: "PlayerToTournament")
   won_tournament_matches Match[]               @relation(name: "Match_Winner_To_User")
@@ -84,19 +82,16 @@ model Tournament {
 }
 
 model Match {
-  id        String      @id @default(cuid())
-  round     Int
-  status    MatchStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-
-  Tournament   Tournament @relation(name: "MatchToTournament", fields: [tournamentId], references: [id])
+  id           String      @id @default(cuid())
+  round        Int
+  status       MatchStatus @default(PENDING)
+  createdAt    DateTime    @default(now())
+  tournament   Tournament  @relation(name: "MatchToTournament", fields: [tournamentId], references: [id])
   tournamentId String
-  games        Game[]     @relation(name: "MatchToGame")
-
-  winner   Player? @relation(name: "Match_Winner_To_User", fields: [winnerId], references: [id])
-  winnerId String?
-
-  opponents Player[] @relation(name: "Match_To_User")
+  games        Game[]      @relation(name: "MatchToGame")
+  winner       Player?     @relation(name: "Match_Winner_To_User", fields: [winnerId], references: [id])
+  winnerId     String?
+  opponents    Player[]    @relation(name: "Match_To_User")
 }
 
 model TournamentStatistic {
