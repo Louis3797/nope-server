@@ -92,7 +92,9 @@ const updateAvailableTournaments = async () => {
   io.emit('list:tournaments', availableRooms);
 };
 
-io.use(isAuthSocket).on('connection', async (socket) => {
+io.use(isAuthSocket);
+
+io.on('connection', async (socket) => {
   logger.info(`A new client with socket id: ${socket.id} connected`);
 
   socket.emit(
