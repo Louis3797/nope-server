@@ -15,7 +15,7 @@ enum GameMode {
   TOURNAMENT
 }
 
-enum BracketStatus {
+enum MatchStatus {
   PENDING
   IN_PROGRESS
   FINISHED
@@ -29,22 +29,23 @@ enum GameStatus {
 }
 
 model Player {
-  id                      String                @id @default(cuid())
-  username                String                @unique
-  firstname               String
-  lastname                String
-  createdAt               DateTime              @default(now())
-  password                String
-  gamesWon                Int                   @default(0)
-  gamesPlayed             Int                   @default(0)
-  playedGames             Game[]                @relation(name: "PlayerToGame")
-  tournaments             Tournament[]          @relation(name: "PlayerToTournament")
-  won_tournament_brackets Bracket[]             @relation(name: "Bracket_Winner_To_User")
-  tournament_brackets     Bracket[]             @relation(name: "Bracket_To_User")
-  tournamentStatistic     TournamentStatistic[] @relation(name: "PlayerToTournamentStatistic")
-  gameMoveHistory         Move[]                @relation(name: "MoveToPlayer")
+  id                     String                @id @default(cuid())
+  username               String                @unique
+  firstname              String
+  lastname               String
+  createdAt              DateTime              @default(now())
+  password               String
+  playedGames            Game[]                @relation(name: "PlayerToGame")
+  tournaments            Tournament[]          @relation(name: "PlayerToTournament")
+  won_tournament_matches Match[]               @relation(name: "Match_Winner_To_User")
+  tournament_matches     Match[]               @relation(name: "Match_To_User")
+  tournamentStatistic    TournamentStatistic[] @relation(name: "PlayerToTournamentStatistic")
+  wonGames               Game[]                @relation(name: "Game_Winner_To_User")
+  wonTournaments         Tournament[]          @relation(name: "Tournament_Winner_To_User")
+  hostedTournaments      Tournament[]          @relation(name: "Tournament_To_Host")
 }
 
+// Todo add winner
 model Game {
   id          String     @id @default(cuid())
   gameMode    GameMode   @default(NORMAL)
@@ -55,36 +56,42 @@ model Game {
   playerCount Int // Stores number of players that already joined
   private     Boolean    @default(false)
   players     Player[]   @relation(name: "PlayerToGame")
-  bracket     Bracket?   @relation(name: "BracketToGame", fields: [bracketId], references: [id])
-  bracketId   String?
-  moves       Move[]     @relation(name: "MoveToGame")
+  match       Match?     @relation(name: "MatchToGame", fields: [matchId], references: [id])
+  matchId     String?
+  moveHistory Json
+  winner      Player?    @relation(name: "Game_Winner_To_User", fields: [winnerId], references: [id])
+  winnerId    String?
 }
 
 model Tournament {
   id                  String                @id @default(cuid())
-  name                String                @unique
   createdAt           DateTime              @default(now())
   endedAt             DateTime?
+  status              GameStatus
+  currentSize         Int
   isCompleted         Boolean               @default(false)
+  currentRound        Int                   @default(0)
+  bestOf              Int                   @default(5) // number of rounds in a match (Best of 5, Best of 3)
+  host                Player                @relation(name: "Tournament_To_Host", fields: [hostId], references: [id])
+  hostId              String
   players             Player[]              @relation(name: "PlayerToTournament")
-  brackets            Bracket[]             @relation(name: "BracketToTournament")
+  matches             Match[]               @relation(name: "MatchToTournament")
   tournamentStatistic TournamentStatistic[] @relation(name: "TournamentToTournamentStatistic")
+  winner              Player?               @relation(name: "Tournament_Winner_To_User", fields: [winnerId], references: [id])
+  winnerId            String?
 }
 
-model Bracket {
-  id        String        @id @default(cuid())
-  round     Int
-  status    BracketStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-
-  Tournament   Tournament @relation(name: "BracketToTournament", fields: [tournamentId], references: [id])
+model Match {
+  id           String      @id @default(cuid())
+  round        Int
+  status       MatchStatus @default(PENDING)
+  createdAt    DateTime    @default(now())
+  tournament   Tournament  @relation(name: "MatchToTournament", fields: [tournamentId], references: [id])
   tournamentId String
-  games        Game[]     @relation(name: "BracketToGame")
-
-  winner   Player? @relation("Bracket_Winner_To_User", fields: [winnerId], references: [id])
-  winnerId String?
-
-  opponents Player[] @relation(name: "Bracket_To_User")
+  games        Game[]      @relation(name: "MatchToGame")
+  winner       Player?     @relation(name: "Match_Winner_To_User", fields: [winnerId], references: [id])
+  winnerId     String?
+  opponents    Player[]    @relation(name: "Match_To_User")
 }
 
 model TournamentStatistic {
@@ -97,16 +104,4 @@ model TournamentStatistic {
   wins          Int        @default(0)
   losses        Int        @default(0)
   winPercentage Float      @default(0)
-}
-
-model Move {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  player    Player   @relation(name: "MoveToPlayer", fields: [playerId], references: [id])
-  playerId  String
-  game      Game     @relation(name: "MoveToGame", fields: [gameId], references: [id])
-  gameId    String
-  action    String   @db.VarChar(256)
-  reason    String?  @db.VarChar(256)
-  compliant Boolean  @default(true)
 }

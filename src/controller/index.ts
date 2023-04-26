@@ -1,2 +1,3 @@
 import * as authController from './auth.controller';
-export { authController };
+import * as tokenController from './token.controller';
+export { authController, tokenController };
