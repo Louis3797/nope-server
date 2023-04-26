@@ -62,6 +62,7 @@ export interface ClientToServerEvents {
     callback: SocketCallback<null>
   ) => void;
   'tournament:leave': (callback: SocketCallback<null>) => void;
+  'tournament:start': (callback: SocketCallback<null>) => void;
 }
 
 export interface InterServerEvents {
