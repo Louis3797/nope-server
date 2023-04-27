@@ -13,7 +13,6 @@ import { authRouter, tokenRouter } from './routes';
 import authLimiter from './middleware/authLimiter';
 import isAuthSocket from './middleware/socket/isAuthSocket';
 import logger from './middleware/logger';
-import TournamentRoom from './model/TournamentRoom';
 import prismaClient from './config/prisma';
 import {
   GameError,
@@ -31,8 +30,6 @@ import type {
   SocketData
 } from './types/socket';
 import httpStatus from 'http-status';
-
-const activeTournaments = new Map<string, TournamentRoom>();
 
 const app: Express = express();
 const server = createServer(app);
@@ -136,7 +133,7 @@ io.on('connection', async (socket) => {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { id, username } = socket.data.user!;
+        const { id } = socket.data.user!;
 
         // Check if player exists in the database
         const player = await playerService.getPlayerByID(id, {
@@ -170,23 +167,6 @@ io.on('connection', async (socket) => {
             bestOf: true
           }
         });
-
-        activeTournaments.set(
-          newTournament.id,
-          new TournamentRoom({
-            tournamentId: newTournament.id,
-            started: false,
-            playerCount: 1,
-            players: [{ id, username, socket, inMatch: false, wonMatches: 0 }],
-            host: id,
-            matches: [],
-            playedMatches: [],
-            isCompleted: false,
-            currentRound: 0,
-            numBestOfMatches,
-            io
-          })
-        );
 
         // define tournamentId in socket.data
         socket.data.tournamentId = newTournament.id;
@@ -304,15 +284,6 @@ io.on('connection', async (socket) => {
           }
         });
 
-        // Add player to tournament in the map
-        const tournament = activeTournaments.get(room.id);
-
-        tournament?.addPlayer({
-          id: player.id,
-          username: player.username,
-          socket
-        });
-
         socket.data.tournamentId = room.id;
         // Send success response to client
         callback({ success: true, data: null, error: null });
@@ -402,19 +373,52 @@ io.on('connection', async (socket) => {
             // cannot be undefined because we checked if there are other players
             (p) => p.id !== tournamentInfo.hostId
           );
-          await prismaClient.tournament.update({
+          const updatedTournamentHost = await prismaClient.tournament.update({
             where: { id: tournamentId },
             data: {
               host: { connect: { id: newHost?.id as string } }
             },
-            select: { id: true, currentSize: true, bestOf: true, players: true }
+            select: {
+              id: true,
+              currentSize: true,
+              players: { select: { id: true, username: true } },
+              tournamentStatistic: {
+                select: { playerId: true, wonMatches: true }
+              },
+              winnerId: true,
+              host: { select: { id: true, username: true } }
+            }
           });
-          socket
-            .to(`tournament:${tournamentId}`)
-            .emit(
-              'tournament:info',
-              `${newHost?.username} is the new host of the tournament`
-            );
+
+          // calculate score of each player
+          const playerData: Array<{
+            id: string;
+            username: string;
+            score: number;
+          }> = updatedTournamentHost.players.map((player) => ({
+            id: player.id,
+            username: player.username,
+            score:
+              (
+                updatedTournamentHost.tournamentStatistic.find(
+                  (stat) => stat.playerId === player.id
+                ) ?? {}
+              ).wonMatches ?? 0
+          }));
+
+          // get winner
+          const winner = playerData.find(
+            (p) => p.id === updatedTournamentHost.winnerId
+          );
+
+          socket.to(`tournament:${tournamentId}`).emit('tournament:info', {
+            message: `${updatedTournamentHost.host.username} is the new host of the tournament`,
+            tournamentId: updatedTournamentHost.id,
+            currentSize: updatedTournamentHost.currentSize,
+            players: playerData,
+            winner: winner ?? null,
+            host: updatedTournamentHost.host
+          });
         }
       }
 
@@ -428,16 +432,12 @@ io.on('connection', async (socket) => {
         select: { id: true, currentSize: true, bestOf: true, players: true }
       });
 
-      activeTournaments.get(tournamentId)?.removePlayer(user.id);
-
       // check if the client was the last player in the tournament
       if (tournamentInfo.currentSize === 1) {
         // delete if last player left
         await prismaClient.tournament.delete({
           where: { id: tournamentId }
         });
-
-        activeTournaments.delete(tournamentId);
       }
 
       // socket leave room
@@ -536,20 +536,52 @@ io.on('connection', async (socket) => {
       }
 
       // update db state
-      await prismaClient.tournament.update({
+      const updatedTournament = await prismaClient.tournament.update({
         where: { id: tournamentId },
-        data: { status: 'IN_PROGRESS' }
+        data: { status: 'IN_PROGRESS' },
+        select: {
+          id: true,
+          currentSize: true,
+          players: { select: { id: true, username: true } },
+          tournamentStatistic: {
+            select: { playerId: true, wonMatches: true }
+          },
+          winnerId: true,
+          host: { select: { id: true, username: true } }
+        }
       });
-
-      activeTournaments.get(tournamentId)?.start();
 
       callback({ success: true, data: null, error: null });
 
       // emit to all clients in the tournament that the tournament starts
-      io.in(`tournament:${tournamentId}`).emit(
-        'tournament:status',
-        'The Tournament started'
+      const playerData: Array<{
+        id: string;
+        username: string;
+        score: number;
+      }> = updatedTournament.players.map((player) => ({
+        id: player.id,
+        username: player.username,
+        score:
+          (
+            updatedTournament.tournamentStatistic.find(
+              (stat) => stat.playerId === player.id
+            ) ?? {}
+          ).wonMatches ?? 0
+      }));
+
+      // get winner
+      const winner = playerData.find(
+        (p) => p.id === updatedTournament.winnerId
       );
+
+      socket.to(`tournament:${tournamentId}`).emit('tournament:info', {
+        message: `${updatedTournament.host.username} is the new host of the tournament`,
+        tournamentId: updatedTournament.id,
+        currentSize: updatedTournament.currentSize,
+        players: playerData,
+        winner: winner ?? null,
+        host: updatedTournament.host
+      });
 
       // update available tournament list
       await updateAvailableTournaments();

@@ -38,9 +38,42 @@ export interface ServerToClientEvents<isSender extends boolean = false> {
     bestOf: number;
     players: Array<Pick<BasicPlayer, 'id' | 'username'>>;
   }) => void;
-  'tournament:info': (message: string) => void;
-  'tournament:status': (message: string) => void;
-  'game:status': (message: string) => void;
+  'tournament:info': (data: {
+    message: string;
+    tournamentId: string;
+    currentSize: number;
+    players: Array<{
+      id: string;
+      username: string;
+      score: number; // won matches
+    }>;
+
+    winner: {
+      id: string;
+      username: string;
+      score: number;
+    } | null;
+    host: {
+      id: string;
+      username: string;
+    };
+  }) => void;
+  'game:status': (data: {
+    message: string;
+    gameId: string;
+    matchNumber: number;
+    players: Array<{
+      id: string;
+      username: string;
+      score: number; // won games
+    }>;
+
+    winner: {
+      id: string;
+      username: string;
+      score: number;
+    } | null;
+  }) => void;
   'game:state': (message: string) => void;
   'game:makeMove': (
     arg: number,
