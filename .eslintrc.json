@@ -71,6 +71,7 @@
     "promise/valid-params": "warn",
 
     "n/no-callback-literal": "off",
+    "security/detect-object-injection": "off",
 
     "sort-imports": [
       "error",
