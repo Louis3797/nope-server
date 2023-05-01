@@ -443,6 +443,10 @@ io.on('connection', async (socket) => {
       // socket leave room
       await socket.leave(`tournament:${tournamentId}`);
 
+      // clear socket room data
+      delete socket.data.tournamentId;
+      delete socket.data.gameId;
+
       // We only need to emit if the tournament is not empty
       if (tournamentInfo.currentSize > 1) {
         socket.to(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
