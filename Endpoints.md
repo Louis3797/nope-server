@@ -90,9 +90,16 @@ Erstellt ein Tunier mit den spezifizierten Optionen
 ##### Payload
 
 ```json
-{
-  "numBestOfMatches": 3 // ungerade zahlen, n > 2 und n < 8
-}
+// kein JSON Objekt
+"numBestOfMatches": 3 // ungerade zahlen, n > 2 und n < 8
+
+```
+
+```ts
+// Beispiel:
+socket.emit('tournament:create', 3, (data) => {
+  // logic
+});
 ```
 
 ##### Response
@@ -132,9 +139,7 @@ Lässt den Client das Tunier mit der spezifizierten tournamentId beitreten
 ##### Payload
 
 ```json
-{
-  "tournamentId": "id"
-}
+"tournamentId": "id" // kein JSON Objekt
 ```
 
 ##### Response
@@ -225,7 +230,7 @@ Success:
 
 Error:
 
-````json
+```json
 {
   "success": false,
   "data": null,
@@ -233,6 +238,7 @@ Error:
     "message": "..."
   }
 }
+```
 
 ### Server -> Client
 
@@ -275,7 +281,7 @@ Schickt allen Client die mit dem Socket.io Server verbunden sind updated über d
     ...
   ]
 }
-````
+```
 
 #### `tournament:playerInfo`
 
@@ -299,6 +305,18 @@ Sendet allen Clients im Tunier updates wenn andere Clients beitreten oder austre
 #### `tournament:info`
 
 Sendet allen Clients im Tunier updates über verschiedene Sachen (Wechsel des Hosts, Matches, etc...)
+
+```json
+{
+  "message": "...."
+}
+```
+
+#### `tournament:status`
+
+Sendet allen Clients im Tunier eine Nachricht, wenn das Tunier startet oder es endet
+
+> Achtung: Wird mit dem nächsten Release durch tournament:info ersetzt!
 
 ```json
 {
