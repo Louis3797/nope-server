@@ -109,7 +109,15 @@ export interface ClientToServerEvents {
   ) => void;
   'tournament:join': (
     tournamentId: string,
-    callback: SocketCallback<null>
+    callback: SocketCallback<{
+      tournamentId: string;
+      currentSize: number;
+      bestOf: number;
+      players: Array<{
+        id: string;
+        username: string;
+      }>;
+    }>
   ) => void;
   'tournament:leave': (callback: SocketCallback<null>) => void;
   'tournament:start': (callback: SocketCallback<null>) => void;

@@ -218,120 +218,124 @@ io.on('connection', async (socket) => {
     }
   );
 
-  socket.on(
-    'tournament:join',
-    async (tournamentId: string, callback: SocketCallback<null>) => {
-      try {
-        // * isAuthSocket middleware defines this property
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { id: playerId } = socket.data.user!;
+  socket.on('tournament:join', async (tournamentId, callback) => {
+    try {
+      // * isAuthSocket middleware defines this property
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const { id: playerId } = socket.data.user!;
 
-        // Check if client is in a other room
-        if (socket.rooms.size > 1) {
-          throw new GameError(
-            'You cannot join a Tournament while your in a other room',
-            httpStatus.FORBIDDEN
-          );
-        }
+      // Check if client is in a other room
+      if (socket.rooms.size > 1) {
+        throw new GameError(
+          'You cannot join a Tournament while your in a other room',
+          httpStatus.FORBIDDEN
+        );
+      }
 
-        // Get the room by ID
-        const room = await prismaClient.tournament.findUnique({
-          where: { id: tournamentId },
-          select: {
-            id: true,
-            currentSize: true,
-            status: true,
-            players: true
-          }
-        });
-
-        // Check if the room exists
-        if (!room) {
-          throw new NotFoundError(
-            'Tournament with the given id does not exist!'
-          );
-        }
-
-        // Get the player by ID
-        const player = await playerService.getPlayerByID(playerId, {
+      // Get the room by ID
+      const room = await prismaClient.tournament.findUnique({
+        where: { id: tournamentId },
+        select: {
           id: true,
-          username: true
-        });
-
-        // Check if the player exists
-        if (!player) {
-          throw new NotFoundError('Player not found');
+          currentSize: true,
+          status: true,
+          players: true
         }
+      });
 
-        const isAlreadyInGame = room.players.find((p) => p.id === player.id);
+      // Check if the room exists
+      if (!room) {
+        throw new NotFoundError('Tournament with the given id does not exist!');
+      }
 
-        if (isAlreadyInGame) {
-          throw new GameError(
-            'Your already in the tournament',
-            httpStatus.BAD_REQUEST
-          );
-        }
+      // Get the player by ID
+      const player = await playerService.getPlayerByID(playerId, {
+        id: true,
+        username: true
+      });
 
-        // Add the player to the tournament room
-        const updatedRoomData = await prismaClient.tournament.update({
-          where: { id: tournamentId },
-          data: {
-            status: 'WAITING_FOR_MORE_PLAYERS',
-            currentSize: { increment: 1 },
-            players: { connect: { id: player.id } }
-          },
-          select: {
-            currentSize: true,
-            id: true,
-            bestOf: true,
-            players: {
-              select: {
-                id: true,
-                username: true
-              }
+      // Check if the player exists
+      if (!player) {
+        throw new NotFoundError('Player not found');
+      }
+
+      const isAlreadyInGame = room.players.find((p) => p.id === player.id);
+
+      if (isAlreadyInGame) {
+        throw new GameError(
+          'Your already in the tournament',
+          httpStatus.BAD_REQUEST
+        );
+      }
+
+      // Add the player to the tournament room
+      const updatedRoomData = await prismaClient.tournament.update({
+        where: { id: tournamentId },
+        data: {
+          status: 'WAITING_FOR_MORE_PLAYERS',
+          currentSize: { increment: 1 },
+          players: { connect: { id: player.id } }
+        },
+        select: {
+          currentSize: true,
+          id: true,
+          bestOf: true,
+          players: {
+            select: {
+              id: true,
+              username: true
             }
           }
-        });
+        }
+      });
 
-        socket.data.tournamentId = room.id;
-        // Send success response to client
-        callback({ success: true, data: null, error: null });
-
-        // Add player to the room
-        await socket.join(`tournament:${tournamentId}`);
-
-        // Emit event to all clients in the room to notify them of the new player
-        io.in(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
-          message: `${player.username} has joined the tournament`,
+      socket.data.tournamentId = room.id;
+      // Send success response to client
+      callback({
+        success: true,
+        data: {
           tournamentId: updatedRoomData.id,
           currentSize: updatedRoomData.currentSize,
           bestOf: updatedRoomData.bestOf,
           players: updatedRoomData.players
-        });
+        },
+        error: null
+      });
 
-        await updateAvailableTournaments();
-      } catch (error) {
-        logger.error(error);
-        if (error instanceof Error) {
-          callback({
-            success: false,
-            data: null,
-            error: {
-              message: error.message
-            }
-          });
-        } else {
-          callback({
-            success: false,
-            data: null,
-            error: {
-              message: 'An unknown error occurred'
-            }
-          });
-        }
+      // Add player to the room
+      await socket.join(`tournament:${tournamentId}`);
+
+      // Emit event to all clients in the room to notify them of the new player
+      io.in(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
+        message: `${player.username} has joined the tournament`,
+        tournamentId: updatedRoomData.id,
+        currentSize: updatedRoomData.currentSize,
+        bestOf: updatedRoomData.bestOf,
+        players: updatedRoomData.players
+      });
+
+      await updateAvailableTournaments();
+    } catch (error) {
+      logger.error(error);
+      if (error instanceof Error) {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: error.message
+          }
+        });
+      } else {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: 'An unknown error occurred'
+          }
+        });
       }
     }
-  );
+  });
 
   socket.on('tournament:leave', async (callback: SocketCallback<null>) => {
     try {
@@ -402,7 +406,7 @@ io.on('connection', async (socket) => {
 
           socket
             .to(`tournament:${tournamentId}`)
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             .emit('tournament:info', tInfo!);
         }
       }
@@ -427,10 +431,6 @@ io.on('connection', async (socket) => {
 
       // socket leave room
       await socket.leave(`tournament:${tournamentId}`);
-
-      // clear socket room data
-      delete socket.data.tournamentId;
-      delete socket.data.gameId;
 
       // We only need to emit if the tournament is not empty
       if (tournamentInfo.currentSize > 1) {
@@ -536,7 +536,7 @@ io.on('connection', async (socket) => {
 
       socket
         .to(`tournament:${tournamentId}`)
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
         .emit('tournament:info', tInfo!);
 
       // update available tournament list
