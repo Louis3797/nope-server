@@ -1,4 +1,5 @@
-import type { GameStatus, Player } from '@prisma/client';
+import type { GameStatus, MatchStatus, Player } from '@prisma/client';
+import type { Move } from '../interfaces/IMove';
 
 // * Payload types
 
@@ -22,6 +23,19 @@ export interface TournamentInfoPayload {
     id: string;
     username: string;
   };
+}
+
+export interface MatchInfoPayload {
+  message: string;
+  tournamentId: string;
+  match: {
+    id: string;
+    round: number;
+    bestOf: number;
+    status: MatchStatus;
+    opponents: Array<Pick<Player, 'id' | 'username'> & { points: number }>;
+    winner: (Pick<Player, 'id' | 'username'> & { points: number }) | null;
+  } | null;
 }
 
 // * Socket types
@@ -64,23 +78,6 @@ export interface ServerToClientEvents<isSender extends boolean = false> {
     players: Array<Pick<Player, 'id' | 'username'>>;
   }) => void;
   'tournament:info': (data: TournamentInfoPayload) => void;
-  'game:status': (data: {
-    message: string;
-    gameId: string;
-    matchNumber: number;
-    players: Array<{
-      id: string;
-      username: string;
-      score: number; // won games
-    }>;
-
-    winner: {
-      id: string;
-      username: string;
-      score: number;
-    } | null;
-  }) => void;
-  'game:state': (message: string) => void;
   'match:invite': (
     data: {
       message: string;
@@ -91,11 +88,16 @@ export interface ServerToClientEvents<isSender extends boolean = false> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback: (...args: WithTimeoutAck<isSender, [MatchInviteResponse]>) => void
   ) => void;
+  'match:info': (data: MatchInfoPayload) => void;
   'game:makeMove': (
-    arg: number,
-    callback: (...args: WithTimeoutAck<isSender, [string]>) => void
+    data: {
+      message: string;
+      timeout: number;
+    },
+    callback: (...args: WithTimeoutAck<isSender, [Move]>) => void
   ) => void;
-  'match:info': (message: string) => void;
+
+  'game:state': (message: string) => void;
 }
 
 export interface ClientToServerEvents {
