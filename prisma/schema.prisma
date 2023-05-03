@@ -58,7 +58,7 @@ model Game {
   players     Player[]   @relation(name: "PlayerToGame")
   match       Match?     @relation(name: "MatchToGame", fields: [matchId], references: [id])
   matchId     String?
-  moveHistory Json
+  moveHistory Json?
   winner      Player?    @relation(name: "Game_Winner_To_User", fields: [winnerId], references: [id])
   winnerId    String?
 }
