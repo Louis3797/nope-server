@@ -44,6 +44,10 @@ const config = {
   },
   cors: {
     origin: validatedEnv.CORS_ORIGIN
+  },
+  matchMaking: {
+    timeoutInterval: 5000,
+    invitationTimeout: 10000
   }
 } as const;
 

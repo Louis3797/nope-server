@@ -13,7 +13,6 @@ import { authRouter, tokenRouter } from './routes';
 import authLimiter from './middleware/authLimiter';
 import isAuthSocket from './middleware/socket/isAuthSocket';
 import logger from './middleware/logger';
-import TournamentRoom from './model/TournamentRoom';
 import prismaClient from './config/prisma';
 import {
   GameError,
@@ -31,8 +30,15 @@ import type {
   SocketData
 } from './types/socket';
 import httpStatus from 'http-status';
+import { PriorityQueue } from './utils';
+import { matchmaking } from './socket/matchmaking';
+import type { Player } from '@prisma/client';
+import { getTournamentInfo } from './service/tournament.service';
 
-const activeTournaments = new Map<string, TournamentRoom>();
+export const matchMakingQueues = new Map<
+  string,
+  PriorityQueue<Pick<Player, 'id' | 'username'>>
+>();
 
 const app: Express = express();
 const server = createServer(app);
@@ -136,7 +142,7 @@ io.on('connection', async (socket) => {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { id, username } = socket.data.user!;
+        const { id } = socket.data.user!;
 
         // Check if player exists in the database
         const player = await playerService.getPlayerByID(id, {
@@ -170,23 +176,6 @@ io.on('connection', async (socket) => {
             bestOf: true
           }
         });
-
-        activeTournaments.set(
-          newTournament.id,
-          new TournamentRoom({
-            tournamentId: newTournament.id,
-            started: false,
-            playerCount: 1,
-            players: [{ id, username, socket, inMatch: false, wonMatches: 0 }],
-            host: id,
-            matches: [],
-            playedMatches: [],
-            isCompleted: false,
-            currentRound: 0,
-            numBestOfMatches,
-            io
-          })
-        );
 
         // define tournamentId in socket.data
         socket.data.tournamentId = newTournament.id;
@@ -229,129 +218,124 @@ io.on('connection', async (socket) => {
     }
   );
 
-  socket.on(
-    'tournament:join',
-    async (tournamentId: string, callback: SocketCallback<null>) => {
-      try {
-        // * isAuthSocket middleware defines this property
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { id: playerId } = socket.data.user!;
+  socket.on('tournament:join', async (tournamentId, callback) => {
+    try {
+      // * isAuthSocket middleware defines this property
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const { id: playerId } = socket.data.user!;
 
-        // Check if client is in a other room
-        if (socket.rooms.size > 1) {
-          throw new GameError(
-            'You cannot join a Tournament while your in a other room',
-            httpStatus.FORBIDDEN
-          );
-        }
+      // Check if client is in a other room
+      if (socket.rooms.size > 1) {
+        throw new GameError(
+          'You cannot join a Tournament while your in a other room',
+          httpStatus.FORBIDDEN
+        );
+      }
 
-        // Get the room by ID
-        const room = await prismaClient.tournament.findUnique({
-          where: { id: tournamentId },
-          select: {
-            id: true,
-            currentSize: true,
-            status: true,
-            players: true
-          }
-        });
-
-        // Check if the room exists
-        if (!room) {
-          throw new NotFoundError(
-            'Tournament with the given id does not exist!'
-          );
-        }
-
-        // Get the player by ID
-        const player = await playerService.getPlayerByID(playerId, {
+      // Get the room by ID
+      const room = await prismaClient.tournament.findUnique({
+        where: { id: tournamentId },
+        select: {
           id: true,
-          username: true
-        });
-
-        // Check if the player exists
-        if (!player) {
-          throw new NotFoundError('Player not found');
+          currentSize: true,
+          status: true,
+          players: true
         }
+      });
 
-        const isAlreadyInGame = room.players.find((p) => p.id === player.id);
+      // Check if the room exists
+      if (!room) {
+        throw new NotFoundError('Tournament with the given id does not exist!');
+      }
 
-        if (isAlreadyInGame) {
-          throw new GameError(
-            'Your already in the tournament',
-            httpStatus.BAD_REQUEST
-          );
-        }
+      // Get the player by ID
+      const player = await playerService.getPlayerByID(playerId, {
+        id: true,
+        username: true
+      });
 
-        // Add the player to the tournament room
-        const updatedRoomData = await prismaClient.tournament.update({
-          where: { id: tournamentId },
-          data: {
-            status: 'WAITING_FOR_MORE_PLAYERS',
-            currentSize: { increment: 1 },
-            players: { connect: { id: player.id } }
-          },
-          select: {
-            currentSize: true,
-            id: true,
-            bestOf: true,
-            players: {
-              select: {
-                id: true,
-                username: true
-              }
+      // Check if the player exists
+      if (!player) {
+        throw new NotFoundError('Player not found');
+      }
+
+      const isAlreadyInGame = room.players.find((p) => p.id === player.id);
+
+      if (isAlreadyInGame) {
+        throw new GameError(
+          'Your already in the tournament',
+          httpStatus.BAD_REQUEST
+        );
+      }
+
+      // Add the player to the tournament room
+      const updatedRoomData = await prismaClient.tournament.update({
+        where: { id: tournamentId },
+        data: {
+          status: 'WAITING_FOR_MORE_PLAYERS',
+          currentSize: { increment: 1 },
+          players: { connect: { id: player.id } }
+        },
+        select: {
+          currentSize: true,
+          id: true,
+          bestOf: true,
+          players: {
+            select: {
+              id: true,
+              username: true
             }
           }
-        });
+        }
+      });
 
-        // Add player to tournament in the map
-        const tournament = activeTournaments.get(room.id);
-
-        tournament?.addPlayer({
-          id: player.id,
-          username: player.username,
-          socket
-        });
-
-        socket.data.tournamentId = room.id;
-        // Send success response to client
-        callback({ success: true, data: null, error: null });
-
-        // Add player to the room
-        await socket.join(`tournament:${tournamentId}`);
-
-        // Emit event to all clients in the room to notify them of the new player
-        io.in(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
-          message: `${player.username} has joined the tournament`,
+      socket.data.tournamentId = room.id;
+      // Send success response to client
+      callback({
+        success: true,
+        data: {
           tournamentId: updatedRoomData.id,
           currentSize: updatedRoomData.currentSize,
           bestOf: updatedRoomData.bestOf,
           players: updatedRoomData.players
-        });
+        },
+        error: null
+      });
 
-        await updateAvailableTournaments();
-      } catch (error) {
-        logger.error(error);
-        if (error instanceof Error) {
-          callback({
-            success: false,
-            data: null,
-            error: {
-              message: error.message
-            }
-          });
-        } else {
-          callback({
-            success: false,
-            data: null,
-            error: {
-              message: 'An unknown error occurred'
-            }
-          });
-        }
+      // Add player to the room
+      await socket.join(`tournament:${tournamentId}`);
+
+      // Emit event to all clients in the room to notify them of the new player
+      io.in(`tournament:${tournamentId}`).emit('tournament:playerInfo', {
+        message: `${player.username} has joined the tournament`,
+        tournamentId: updatedRoomData.id,
+        currentSize: updatedRoomData.currentSize,
+        bestOf: updatedRoomData.bestOf,
+        players: updatedRoomData.players
+      });
+
+      await updateAvailableTournaments();
+    } catch (error) {
+      logger.error(error);
+      if (error instanceof Error) {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: error.message
+          }
+        });
+      } else {
+        callback({
+          success: false,
+          data: null,
+          error: {
+            message: 'An unknown error occurred'
+          }
+        });
       }
     }
-  );
+  });
 
   socket.on('tournament:leave', async (callback: SocketCallback<null>) => {
     try {
@@ -402,19 +386,28 @@ io.on('connection', async (socket) => {
             // cannot be undefined because we checked if there are other players
             (p) => p.id !== tournamentInfo.hostId
           );
-          await prismaClient.tournament.update({
+          const updatedTournamentHost = await prismaClient.tournament.update({
             where: { id: tournamentId },
             data: {
               host: { connect: { id: newHost?.id as string } }
             },
-            select: { id: true, currentSize: true, bestOf: true, players: true }
+            select: {
+              id: true,
+              host: {
+                select: { username: true }
+              }
+            }
           });
+
+          const tInfo = await getTournamentInfo(
+            tournamentId,
+            `${updatedTournamentHost.host.username} is the new host of the tournament`
+          );
+
           socket
             .to(`tournament:${tournamentId}`)
-            .emit(
-              'tournament:info',
-              `${newHost?.username} is the new host of the tournament`
-            );
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
+            .emit('tournament:info', tInfo!);
         }
       }
 
@@ -428,24 +421,16 @@ io.on('connection', async (socket) => {
         select: { id: true, currentSize: true, bestOf: true, players: true }
       });
 
-      activeTournaments.get(tournamentId)?.removePlayer(user.id);
-
       // check if the client was the last player in the tournament
       if (tournamentInfo.currentSize === 1) {
         // delete if last player left
         await prismaClient.tournament.delete({
           where: { id: tournamentId }
         });
-
-        activeTournaments.delete(tournamentId);
       }
 
       // socket leave room
       await socket.leave(`tournament:${tournamentId}`);
-
-      // clear socket room data
-      delete socket.data.tournamentId;
-      delete socket.data.gameId;
 
       // We only need to emit if the tournament is not empty
       if (tournamentInfo.currentSize > 1) {
@@ -536,25 +521,45 @@ io.on('connection', async (socket) => {
       }
 
       // update db state
-      await prismaClient.tournament.update({
+      const updatedTournament = await prismaClient.tournament.update({
         where: { id: tournamentId },
-        data: { status: 'IN_PROGRESS' }
+        data: { status: 'IN_PROGRESS' },
+        select: {
+          id: true,
+          players: { select: { id: true, username: true } }
+        }
       });
-
-      activeTournaments.get(tournamentId)?.start();
 
       callback({ success: true, data: null, error: null });
 
-      // emit to all clients in the tournament that the tournament starts
-      io.in(`tournament:${tournamentId}`).emit(
-        'tournament:status',
-        'The Tournament started'
-      );
+      const tInfo = await getTournamentInfo(tournamentId, 'Tournament started');
+
+      socket
+        .to(`tournament:${tournamentId}`)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
+        .emit('tournament:info', tInfo!);
 
       // update available tournament list
       await updateAvailableTournaments();
 
-      // Todo generate matches and let the players play
+      // * start matchmaking queue
+
+      // create tournament statistics for all players
+      for (const player of updatedTournament.players) {
+        await prismaClient.tournamentStatistic.create({
+          data: {
+            player: { connect: { id: player.id } },
+            tournament: { connect: { id: tournamentId } }
+          }
+        });
+      }
+
+      matchMakingQueues.set(
+        tournamentId,
+        new PriorityQueue(updatedTournament.players)
+      );
+
+      matchmaking(io, tournamentId);
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {

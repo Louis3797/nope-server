@@ -296,7 +296,8 @@ Sendet allen Clients im Tunier updates wenn andere Clients beitreten oder austre
   "players": [
     {
       "id": "playerId",
-      "username": "username"
+      "username": "username",
+      "score": 0
     }
   ]
 }
@@ -308,7 +309,28 @@ Sendet allen Clients im Tunier updates über verschiedene Sachen (Wechsel des Ho
 
 ```json
 {
-  "message": "...."
+  "message": "...",
+  "tournamentId": "tournament id",
+  "currentSize": 2,
+  "players": [
+    {
+      "id": "player id",
+      "username": "player username",
+      "score": 2 // gewonne matches
+    }
+    ...
+    ...
+    ...
+  ],
+  "winner": { // kann auch null sein
+    "id": "winner id",
+    "username": "winner username",
+    "score": 2
+  },
+  "host": {
+    "id": "hostId",
+    "username": "host username"
+  }
 }
 ```
 
