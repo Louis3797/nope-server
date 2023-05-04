@@ -13,8 +13,8 @@ export default interface ICard {
     | 'yellow-green'
     | 'multi'
     | null; // null for action cards or joker
-  value: 1 | 2 | 3 | null; // null for action cards or joker
-  select?: 1 | -1 | null; // is only not null if the selection card is played
-  selectValue?: 1 | 2 | 3 | null;
+  value: number | null; // null for action cards or joker
+  select?: number | null; // is only not null if the selection card is played
+  selectValue?: number | null;
   selectedColor?: 'red' | 'blue' | 'green' | 'yellow' | null;
 }
