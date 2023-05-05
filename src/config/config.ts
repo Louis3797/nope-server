@@ -46,8 +46,11 @@ const config = {
     origin: validatedEnv.CORS_ORIGIN
   },
   matchMaking: {
-    timeoutInterval: 5000,
-    invitationTimeout: 10000
+    timeoutInterval: 5000, // 5 sec
+    invitationTimeout: 10000 // 10 sec
+  },
+  game: {
+    turnTimeout: 10000 // 10 sec
   }
 } as const;
 
