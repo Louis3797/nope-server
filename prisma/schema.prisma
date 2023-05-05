@@ -95,17 +95,15 @@ model Match {
 }
 
 model TournamentStatistic {
-  id                 String     @id @default(cuid())
-  player             Player     @relation(name: "PlayerToTournamentStatistic", fields: [playerId], references: [id])
-  playerId           String
-  tournament         Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id])
-  tournamentId       String
-  matchesPlayed      Int        @default(0)
-  wonMatches         Int        @default(0)
-  lostMatches        Int        @default(0)
-  gamesPlayed        Int        @default(0)
-  wonGames           Int        @default(0)
-  lostGames          Int        @default(0)
-  wonGamePercentage  Float      @default(0)
-  wonMatchPercantage Float      @default(0)
+  id            String     @id @default(cuid())
+  player        Player     @relation(name: "PlayerToTournamentStatistic", fields: [playerId], references: [id])
+  playerId      String
+  tournament    Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id])
+  tournamentId  String
+  matchesPlayed Int        @default(0)
+  wonMatches    Int        @default(0)
+  lostMatches   Int        @default(0)
+  gamesPlayed   Int        @default(0)
+  wonGames      Int        @default(0)
+  lostGames     Int        @default(0)
 }
