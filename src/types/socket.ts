@@ -1,5 +1,5 @@
 import type { GameStatus, MatchStatus, Player } from '@prisma/client';
-import type { Move } from '../interfaces/IMove';
+import type { ICard, Move } from '../interfaces/';
 
 // * Payload types
 
@@ -36,6 +36,34 @@ export interface MatchInfoPayload {
     opponents: Array<Pick<Player, 'id' | 'username'> & { points: number }>;
     winner: (Pick<Player, 'id' | 'username'> & { points: number }) | null;
   } | null;
+}
+
+export interface GameStatePayload {
+  matchId: string;
+  gameId: string;
+  topCard: ICard;
+  lastTopCard: ICard | null; // card under top card
+  drawPileSize: number;
+  players: Array<{
+    username: string;
+    id: string;
+    handSize: number;
+  }>;
+
+  hand: ICard[];
+  handSize: number;
+  currentPlayer: {
+    username: string;
+    id: string;
+  };
+  currentPlayerIdx: number;
+  prevPlayer: {
+    username: string;
+    id: string;
+  };
+  prevPlayerIdx: number | null;
+  prevTurnCards: ICard[]; // last placed card
+  lastMove: Move | null;
 }
 
 // * Socket types
@@ -96,8 +124,11 @@ export interface ServerToClientEvents<isSender extends boolean = false> {
     },
     callback: (...args: WithTimeoutAck<isSender, [Move]>) => void
   ) => void;
-
-  'game:state': (message: string) => void;
+  'game:state': (data: GameStatePayload) => void;
+  'game:status': (data: {
+    message: string;
+    winner: Pick<Player, 'id' | 'username'> & { points: number };
+  }) => void;
 }
 
 export interface ClientToServerEvents {
