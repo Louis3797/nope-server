@@ -30,4 +30,5 @@ export interface IGameState {
     state: State;
   }>;
   getState: () => State;
+  setWinner: (winner: GamePlayer) => void;
 }
