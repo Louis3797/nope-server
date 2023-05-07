@@ -5,19 +5,15 @@ export interface Move {
   card1: ICard | null;
   card2: ICard | null;
   card3: ICard | null;
+  reason: string;
 }
 
 export interface MoveHistoryObject {
   id: string;
   moveNumber: number; // number of which move in the game it was
-  createdAt: string;
+  createdAt: string; // returns iso formatted time
   playerId: string;
-  action: Move;
+  move: Move;
   reason: string;
   compliant: boolean;
-}
-
-export interface MoveHistory {
-  gameId: string;
-  moves: MoveHistoryObject[];
 }

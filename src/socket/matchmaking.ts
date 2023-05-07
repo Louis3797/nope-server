@@ -10,6 +10,8 @@ import type {
 } from '../types/socket';
 import { matchMakingQueues } from '../app';
 import { getTournamentInfo } from '../service/tournament.service';
+import startMatch from './startMatch';
+import type { Player } from '@prisma/client';
 
 export const matchmaking = (
   io: Server<
@@ -161,10 +163,12 @@ export const matchmaking = (
                 where: { id: match.id }
               });
 
-              io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                'match:info',
-                'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue'
-              );
+              io.to([socketPlayer1.id, socketPlayer2.id]).emit('match:info', {
+                message:
+                  'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
+                tournamentId,
+                match: null
+              });
 
               if (responses.length === 1 && responses[0]?.id) {
                 // One client acknowledged the invite
@@ -209,10 +213,12 @@ export const matchmaking = (
                   where: { id: match.id }
                 });
 
-                io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                  'match:info',
-                  'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue'
-                );
+                io.to([socketPlayer1.id, socketPlayer2.id]).emit('match:info', {
+                  message:
+                    'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
+                  tournamentId,
+                  match: null
+                });
                 // Add the players back to the queue with the same priority
 
                 queue.enqueue(player1, player1Priority + 1);
@@ -232,7 +238,12 @@ export const matchmaking = (
                 if (winnerId !== player1.id && winnerId !== player2.id) {
                   io.to([socketPlayer1.id, socketPlayer2.id]).emit(
                     'match:info',
-                    'An error appeared you will be put back into the matchmaking queue'
+                    {
+                      message:
+                        'An error appeared you will be put back into the matchmaking queue',
+                      tournamentId,
+                      match: null
+                    }
                   );
 
                   queue.enqueue(player1, player1Priority + 1);
@@ -241,11 +252,18 @@ export const matchmaking = (
                   return;
                 }
                 // update match winner
-                await prismaClient.match.update({
+                const updatedMatch = await prismaClient.match.update({
                   where: { id: match.id },
                   data: {
                     status: 'FINISHED',
                     winner: { connect: { id: winnerId } }
+                  },
+                  select: {
+                    id: true,
+                    opponents: { select: { id: true, username: true } },
+                    winner: { select: { id: true, username: true } },
+                    round: true,
+                    status: true
                   }
                 });
 
@@ -275,10 +293,30 @@ export const matchmaking = (
                   }
                 });
 
-                io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                  'match:info',
-                  `${statistic?.player.username} won the game bc the opponent rejected the match invitation.`
-                );
+                const winner: Pick<Player, 'id' | 'username'> & {
+                  points: number;
+                } = Object.assign(updatedMatch.winner!, { points: 0 });
+
+                const playerData: Array<
+                  Pick<Player, 'id' | 'username'> & { points: number }
+                > = [];
+
+                for (const player of updatedMatch.opponents) {
+                  playerData.push(Object.assign(player, { points: 0 }));
+                }
+
+                io.to([socketPlayer1.id, socketPlayer2.id]).emit('match:info', {
+                  message: `${statistic?.player.username} won the game, because his opponent rejected the match invitation.`,
+                  tournamentId,
+                  match: {
+                    id: updatedMatch.id,
+                    round: updatedMatch.round,
+                    bestOf: tournamentData.bestOf,
+                    status: updatedMatch.status,
+                    winner,
+                    opponents: playerData
+                  }
+                });
 
                 // Send tournament info with new score
                 const tInfo = await getTournamentInfo(
@@ -293,17 +331,68 @@ export const matchmaking = (
                 queue.enqueue(player1, player1Priority + 1);
                 queue.enqueue(player2, player2Priority + 1);
               } else {
-                await prismaClient.match.update({
+                const updatedMatch = await prismaClient.match.update({
                   where: { id: match.id },
-                  data: { status: 'IN_PROGRESS' }
+                  data: { status: 'IN_PROGRESS' },
+                  select: {
+                    id: true,
+                    opponents: { select: { id: true, username: true } },
+                    winner: { select: { id: true, username: true } },
+                    round: true,
+                    status: true
+                  }
                 });
+
+                const playerData: Array<
+                  Pick<Player, 'id' | 'username'> & { points: number }
+                > = [];
+
+                for (const player of updatedMatch.opponents) {
+                  playerData.push(Object.assign(player, { points: 0 }));
+                }
                 // both accepted
                 socketPlayer1.join(`tournament-match:${match.id}`);
                 socketPlayer2.join(`tournament-match:${match.id}`);
 
-                io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                  'match:info',
-                  'You accepted the invite. Please wait for the first game to start'
+                io.to([socketPlayer1.id, socketPlayer2.id]).emit('match:info', {
+                  message:
+                    'You accepted the invite. Please wait for the match to start',
+                  tournamentId,
+                  match: {
+                    id: updatedMatch.id,
+                    round: updatedMatch.round,
+                    bestOf: tournamentData.bestOf,
+                    status: updatedMatch.status,
+                    winner: null,
+                    opponents: playerData
+                  }
+                });
+
+                const opponents = {
+                  player1: {
+                    id: player1.id,
+                    username: player1.username,
+                    socket: socketPlayer1,
+                    points: 0,
+                    priority: player1Priority
+                  },
+                  player2: {
+                    id: player2.id,
+                    username: player2.username,
+                    socket: socketPlayer2,
+                    points: 0,
+                    priority: player2Priority
+                  }
+                };
+                // ! dont await startMatch it will stop
+                // ! the matchmaking and wait till the match ends
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                startMatch(
+                  io,
+                  opponents,
+                  tournamentId,
+                  match.id,
+                  tournamentData.bestOf
                 );
               }
             }
