@@ -392,7 +392,6 @@ export const matchmaking = (
                   opponents,
                   tournamentId,
                   match.id,
-                  0,
                   tournamentData.bestOf
                 );
               }
