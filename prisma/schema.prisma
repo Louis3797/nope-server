@@ -69,8 +69,6 @@ model Tournament {
   endedAt             DateTime?
   status              GameStatus
   currentSize         Int
-  isCompleted         Boolean               @default(false)
-  currentRound        Int                   @default(0)
   bestOf              Int                   @default(5) // number of rounds in a match (Best of 5, Best of 3)
   host                Player                @relation(name: "Tournament_To_Host", fields: [hostId], references: [id])
   hostId              String
