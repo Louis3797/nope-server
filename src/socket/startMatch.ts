@@ -37,6 +37,7 @@ const startMatch = async (
   matchId: string,
   bestOf: number
 ): Promise<void> => {
+  // create game instance
   const game = new GameState({
     players: [
       {
@@ -89,7 +90,6 @@ const startMatch = async (
       match: { connect: { id: matchId } }
     }
   });
-  // Todo start game in 5 seconds
 
   io.to([opponents.player1.socket.id, opponents.player2.socket.id]).emit(
     'match:info',
