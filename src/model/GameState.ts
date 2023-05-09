@@ -133,7 +133,7 @@ export default class GameState implements IGameState {
         if (move.card1 || move.card2 || move.card3) return false;
 
         if (this.canPlaceCard()) {
-          return true; // player can place card
+          return false; // player can place card
         }
 
         return true;
@@ -190,28 +190,42 @@ export default class GameState implements IGameState {
           const index = currentPlayer.hand.indexOf(card1);
           if (index !== -1) {
             currentPlayer.hand.splice(index, 1);
+          } else {
+            return null;
           }
         } else if (card1 && card2 && !card3) {
           const index1 = currentPlayer.hand.indexOf(card1);
-          const index2 = currentPlayer.hand.indexOf(card2);
+
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
+          } else {
+            return null;
           }
+          const index2 = currentPlayer.hand.indexOf(card2);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
+          } else {
+            return null;
           }
         } else if (card1 && card2 && card3) {
           const index1 = currentPlayer.hand.indexOf(card1);
-          const index2 = currentPlayer.hand.indexOf(card2);
-          const index3 = currentPlayer.hand.indexOf(card3);
+
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
+          } else {
+            return null;
           }
+          const index2 = currentPlayer.hand.indexOf(card2);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
+          } else {
+            return null;
           }
+          const index3 = currentPlayer.hand.indexOf(card3);
           if (index3 !== -1) {
             currentPlayer.hand.splice(index3, 1);
+          } else {
+            return null;
           }
         }
 
@@ -359,6 +373,7 @@ export default class GameState implements IGameState {
    * if the drawPile is empty
    */
   private refillDrawPile = (): void => {
+    // Todo letzten 2 karten da lassen
     const drawPile = this.state.drawPile;
     let discardPile = this.state.discardPile;
 
