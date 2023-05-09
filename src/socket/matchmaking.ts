@@ -48,6 +48,43 @@ export const matchmaking = (
       (tournamentData.currentSize * (tournamentData.currentSize - 1)) / 2;
 
     if (tournamentData.matches.length >= numOfAllMatches) {
+      // get winner
+      const endStatistics = await prismaClient.tournament.findUnique({
+        where: { id: tournamentId },
+        select: {
+          tournamentStatistic: {
+            select: { playerId: true, wonMatches: true }
+          }
+        }
+      });
+
+      const winnerStatisitc = endStatistics?.tournamentStatistic.reduce(
+        (prev, current) => {
+          return prev.wonMatches > current.wonMatches ? prev : current;
+        }
+      );
+
+      await prismaClient.tournament.update({
+        where: { id: tournamentId },
+        data: {
+          status: 'FINISHED',
+          endedAt: new Date(),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          winner: { connect: { id: winnerStatisitc!.playerId } }
+        }
+      });
+      // emit ending
+
+      const endedTournamentInfo = await getTournamentInfo(
+        tournamentId,
+        'The tournament ended'
+      );
+
+      io.to(`tournament:${tournamentId}`).emit(
+        'tournament:info',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        endedTournamentInfo!
+      );
       return;
     }
 
