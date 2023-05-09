@@ -383,17 +383,22 @@ export default class GameState implements IGameState {
       // get top card
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const topCard: ICard = discardPile.shift()!;
+      const lastTopCard = discardPile.shift();
 
       // put topcard back on top
       newDiscardPile.push(topCard);
+
+      if (lastTopCard) {
+        newDiscardPile.push(lastTopCard);
+      }
 
       drawPile.push(...discardPile);
       discardPile = newDiscardPile;
 
       shuffle(drawPile);
 
-      // will be put back in the draw pile
-      this.state.lastTopCard = null;
+      this.state.topCard = topCard;
+      this.state.lastTopCard = lastTopCard ?? null;
     }
   };
 
