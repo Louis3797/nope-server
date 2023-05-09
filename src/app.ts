@@ -372,6 +372,13 @@ io.on('connection', async (socket) => {
           `Tournament with the id ${tournamentId} not found`
         );
       }
+
+      if (tournamentInfo.status === 'IN_PROGRESS') {
+        throw new GameError(
+          'You cant leave a tournament that is in progress.',
+          httpStatus.FORBIDDEN
+        );
+      }
       // check if leaving client is host
       if (user.id === tournamentInfo.hostId) {
         // if the player that leaves is the host than we must
