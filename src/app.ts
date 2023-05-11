@@ -108,10 +108,6 @@ io.use(isAuthSocket);
 io.on('connection', async (socket) => {
   logger.info(`A new client with socket id: ${socket.id} connected`);
 
-  if (socket.recovered) {
-    console.log(`${socket.id} recovered ${JSON.stringify(socket.data)}`);
-  }
-
   io.emit(
     'list:tournaments',
     await prismaClient.tournament.findMany({
@@ -578,6 +574,7 @@ io.on('connection', async (socket) => {
         new PriorityQueue(updatedTournament.players)
       );
 
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       await matchmaking(io, tournamentId);
     } catch (error) {
       logger.error(error);
@@ -602,7 +599,7 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('disconnecting', () => {
-    console.log(`${socket.id} is in disconnecting state`);
+    logger.info(`${socket.id} is in disconnecting state`);
   });
 
   socket.on('disconnect', () => {

@@ -13,19 +13,25 @@ import type {
 import { v4 } from 'uuid';
 
 export default class GameState implements IGameState {
+  // State of the game
   private readonly state: State;
+
+  // Counter for the move history
   // eslint-disable-next-line @typescript-eslint/no-inferrable-types
   private moveNumber: number = 1;
-  private readonly history: Array<{
-    move: MoveHistoryObject | null;
-    state: State;
-  }> = [];
 
+  // Stores each move of the players
+  private readonly history: MoveHistoryObject[] = [];
+
+  /**
+   * Constructor of the class
+   * @param state Beginn State of the game
+   */
   constructor(state: State) {
     this.state = state;
 
     this.generateDeck();
-    shuffle(this.state.drawPile);
+    this.state.drawPile = shuffle(this.state.drawPile);
 
     // Give cards to player
     this.dispenseCards();
@@ -46,105 +52,129 @@ export default class GameState implements IGameState {
    * @returns Returns true by conform move, otherwise false
    */
   checkMove = (move: Move): boolean => {
-    const { currentPlayerIdx, players, topCard, lastMove } = this.state;
-    const currentPlayerHand = players[currentPlayerIdx!]!.hand;
-    if (!topCard) return false;
-
     switch (move.type) {
       case 'take':
-        if (lastMove && lastMove.type === 'take') return false;
-        // true if player defined no cards in his move and also has no cards in his hand he can place
-        return (
-          !(move.card1 || move.card2 || move.card3) && !this.canPlaceCard()
-        );
-      case 'put': {
-        if (!move.card1 || currentPlayerHand.length < 1) {
-          return false; // first card is not defined or hand is empty;
-        }
-
-        const { value: topCardValue, color: topCardColor } = topCard;
-
-        if (!topCardColor) return false; // top card not defined
-
-        const { card1, card2, card3 } = move;
-
-        if (card1 && !card2 && !card3) {
-          if (!this.isConformCard(card1)) return false; // not a conform card
-          if (topCardValue !== 1 || !card1.color?.includes(topCardColor)) {
-            return false; // not enough cards or not the right color
-          }
-          const card1InHand = currentPlayerHand.some(
-            (c) => c.color === card1.color && c.value === card1.value
-          );
-          return card1InHand; // true if player has the card in his hand
-        }
-        if (card1 && card2 && !card3) {
-          if (!this.isConformCard(card1) || !this.isConformCard(card2)) {
-            return false; // not a conform card
-          }
-          if (
-            topCardValue !== 2 ||
-            !card1.color?.includes(topCardColor) ||
-            !card2.color?.includes(topCardColor)
-          ) {
-            return false; // false amount of placed cards or false color
-          }
-          const card1InHand = currentPlayerHand.some(
-            (c) => c.color === card1.color && c.value === card1.value
-          );
-          const card2InHand = currentPlayerHand.some(
-            (c) => c.color === card2.color && c.value === card2.value
-          );
-          return card1InHand && card2InHand; // true if player has specified cards in hand
-        }
-        if (card1 && card2 && card3) {
-          if (
-            !this.isConformCard(card1) ||
-            !this.isConformCard(card2) ||
-            !this.isConformCard(card3)
-          ) {
-            return false; // not a conform card
-          }
-          if (
-            topCardValue !== 3 ||
-            !card1.color?.includes(topCardColor) ||
-            !card2.color?.includes(topCardColor) ||
-            !card3.color?.includes(topCardColor)
-          ) {
-            return false; // false amount of placed cards or false color
-          }
-          const card1InHand = currentPlayerHand.some(
-            (c) => c.color === card1.color && c.value === card1.value
-          );
-          const card2InHand = currentPlayerHand.some(
-            (c) => c.color === card2.color && c.value === card2.value
-          );
-          const card3InHand = currentPlayerHand.some(
-            (c) => c.color === card3.color && c.value === card3.value
-          );
-          return card1InHand && card2InHand && card3InHand; // true if player has specified cards in hand
-        }
-        return false; // fallback
-      }
+        return this.checkTake(move);
+      case 'put':
+        return this.checkPut(move);
       case 'nope':
-        // if null or last move was not a take return false
-        if (!lastMove || lastMove.type !== 'take') return false;
-        // check if cards are all null
-        if (move.card1 || move.card2 || move.card3) return false;
-
-        if (this.canPlaceCard()) {
-          return false; // player can place card
-        }
-
-        return true;
+        return this.checkNope(move);
       default:
         return false;
     }
   };
 
+  private checkTake = (move: Move): boolean => {
+    const { topCard, lastMove } = this.state;
+
+    if (!topCard) return false;
+
+    if (lastMove && lastMove.type === 'take') return false;
+    // true if player defined no cards in his move and also has no cards in his hand he can place
+
+    return !(move.card1 || move.card2 || move.card3) && !this.canPlaceCard();
+  };
+
+  private checkPut = (move: Move): boolean => {
+    const { currentPlayerIdx, players, topCard } = this.state;
+    const currentPlayerHand = players[currentPlayerIdx!]!.hand;
+    if (!topCard) return false;
+
+    if (!move.card1 || currentPlayerHand.length < 1) {
+      return false; // first card is not defined or hand is empty;
+    }
+
+    const { value: topCardValue, color: topCardColor } = topCard;
+
+    if (!topCardColor) return false; // top card not defined
+
+    const { card1, card2, card3 } = move;
+
+    if (card1 && !card2 && !card3) {
+      if (!this.isConformCard(card1)) return false; // not a conform card
+      if (topCardValue !== 1 || !card1.color?.includes(topCardColor)) {
+        return false; // not enough cards or not the right color
+      }
+      const card1InHand = currentPlayerHand.some(
+        (c) => c.color === card1.color && c.value === card1.value
+      );
+      return card1InHand; // true if player has the card in his hand
+    }
+    if (card1 && card2 && !card3) {
+      if (!this.isConformCard(card1) || !this.isConformCard(card2)) {
+        return false; // not a conform card
+      }
+      if (
+        topCardValue !== 2 ||
+        !card1.color?.includes(topCardColor) ||
+        !card2.color?.includes(topCardColor)
+      ) {
+        return false; // false amount of placed cards or false color
+      }
+      const card1InHand = currentPlayerHand.some(
+        (c) => c.color === card1.color && c.value === card1.value
+      );
+      const card2InHand = currentPlayerHand.some(
+        (c) => c.color === card2.color && c.value === card2.value
+      );
+      return card1InHand && card2InHand; // true if player has specified cards in hand
+    }
+    if (card1 && card2 && card3) {
+      if (
+        !this.isConformCard(card1) ||
+        !this.isConformCard(card2) ||
+        !this.isConformCard(card3)
+      ) {
+        return false; // not a conform card
+      }
+      if (
+        topCardValue !== 3 ||
+        !card1.color?.includes(topCardColor) ||
+        !card2.color?.includes(topCardColor) ||
+        !card3.color?.includes(topCardColor)
+      ) {
+        return false; // false amount of placed cards or false color
+      }
+      const card1InHand = currentPlayerHand.some(
+        (c) => c.color === card1.color && c.value === card1.value
+      );
+      const card2InHand = currentPlayerHand.some(
+        (c) => c.color === card2.color && c.value === card2.value
+      );
+      const card3InHand = currentPlayerHand.some(
+        (c) => c.color === card3.color && c.value === card3.value
+      );
+      return card1InHand && card2InHand && card3InHand; // true if player has specified cards in hand
+    }
+    return false; // fallback
+  };
+
+  private checkNope = (move: Move): boolean => {
+    const { topCard, lastMove } = this.state;
+
+    if (!topCard) return false;
+
+    // if null or last move was not a take return false
+    if (!lastMove || lastMove.type !== 'take') return false;
+    // check if cards are all null
+    if (move.card1 || move.card2 || move.card3) return false;
+
+    if (this.canPlaceCard()) {
+      return false; // player can place card
+    }
+
+    return true;
+  };
+
+  /**
+   * Updates the state of the game with the given Move
+   * @param move Action from the player
+   * @returns Returns the new state of the game
+   */
   updateState = (move: Move): State | null => {
     const compliant = this.checkMove(move);
 
+    this.updateHistory(move, compliant);
     if (!compliant) return null;
 
     const {
@@ -161,9 +191,6 @@ export default class GameState implements IGameState {
 
     if (!currentPlayer) return null; // currentPlayer is null
 
-    // update last move
-    this.state.lastMove = move;
-
     switch (move.type) {
       case 'take':
         // check if drawPile is empty
@@ -176,10 +203,14 @@ export default class GameState implements IGameState {
         prevTurnCards.splice(0, prevTurnCards.length); // empty prevTurnCards
 
         // make the currentPlayer the prevPlayer but let him currentPlayer
-        this.state.prevPlayer = currentPlayer;
+        this.state.prevPlayer = {
+          id: currentPlayer.id,
+          username: currentPlayer.username
+        };
         this.state.prevPlayerIdx = currentPlayerIdx;
 
-        this.updateHistory(move, compliant);
+        // update last move
+        this.state.lastMove = move;
         return this.state;
 
       case 'put': {
@@ -191,6 +222,8 @@ export default class GameState implements IGameState {
           if (index !== -1) {
             currentPlayer.hand.splice(index, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
         } else if (card1 && card2 && !card3) {
@@ -199,12 +232,16 @@ export default class GameState implements IGameState {
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
           const index2 = currentPlayer.hand.indexOf(card2);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
         } else if (card1 && card2 && card3) {
@@ -213,18 +250,24 @@ export default class GameState implements IGameState {
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
           const index2 = currentPlayer.hand.indexOf(card2);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
           const index3 = currentPlayer.hand.indexOf(card3);
           if (index3 !== -1) {
             currentPlayer.hand.splice(index3, 1);
           } else {
+            // update last move
+            this.state.lastMove = move;
             return null;
           }
         }
@@ -248,20 +291,23 @@ export default class GameState implements IGameState {
         this.state.lastTopCard = topCard;
         this.state.topCard = discardPile.shift() ?? null;
 
-        this.updateHistory(move, compliant);
         // Next players turn
         this.nextPlayer();
+        // update last move
+        this.state.lastMove = move;
         return this.state;
       }
       case 'nope':
         prevTurnCards.splice(0, prevTurnCards.length); // empty prevTurnCards
 
-        this.updateHistory(move, compliant);
-
         // Next players turn
         this.nextPlayer();
+        // update last move
+        this.state.lastMove = move;
         return this.state;
       default:
+        // update last move
+        this.state.lastMove = move;
         return null;
     }
   };
@@ -330,7 +376,8 @@ export default class GameState implements IGameState {
    * Fill player hands on start of the game
    */
   private dispenseCards = (): void => {
-    for (let i = 0; i < this.state.players.length * 7; i++) {
+    const amountOfCards = this.state.players.length === 2 ? 8 : 7;
+    for (let i = 0; i < this.state.players.length * amountOfCards; i++) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const player = this.state.players.at(i % this.state.players.length)!;
 
@@ -373,8 +420,7 @@ export default class GameState implements IGameState {
    * if the drawPile is empty
    */
   private refillDrawPile = (): void => {
-    // Todo letzten 2 karten da lassen
-    const drawPile = this.state.drawPile;
+    let drawPile = this.state.drawPile;
     let discardPile = this.state.discardPile;
 
     if (discardPile.length >= 2 && drawPile.length === 0) {
@@ -395,7 +441,7 @@ export default class GameState implements IGameState {
       drawPile.push(...discardPile);
       discardPile = newDiscardPile;
 
-      shuffle(drawPile);
+      drawPile = shuffle(drawPile);
 
       this.state.topCard = topCard;
       this.state.lastTopCard = lastTopCard ?? null;
@@ -433,10 +479,10 @@ export default class GameState implements IGameState {
       const currPlayer = this.state.players.find(
         (p) => p.id === this.state.currentPlayer?.id
       )!;
-      const placableCards = currPlayer.hand.filter((card) =>
-        card.color!.includes(topCardColor)
+      const placeableCards = currPlayer.hand.filter((card) =>
+        topCardColor.includes(card.color!)
       );
-      return placableCards.length >= topCardValue;
+      return placeableCards.length >= topCardValue;
     }
     return false;
   };
@@ -482,28 +528,20 @@ export default class GameState implements IGameState {
   };
 
   private updateHistory = (move: Move, compliant: boolean): void => {
-    const temp = {
-      state: this.state,
-      move: {
-        id: v4(),
-        moveNumber: this.moveNumber,
-        createdAt: new Date().toISOString(),
-        playerId: this.state.currentPlayer!.id,
-        move,
-        reason: move.reason,
-        compliant
-      }
-    };
-
-    this.history.push(temp);
+    this.history.push({
+      id: v4(),
+      moveNumber: this.moveNumber,
+      createdAt: new Date().toISOString(),
+      playerId: this.state.currentPlayer!.id,
+      move,
+      reason: move.reason,
+      compliant
+    });
 
     this.moveNumber++;
   };
 
-  getHistory = (): Array<{
-    move: MoveHistoryObject | null;
-    state: State;
-  }> => {
+  getHistory = (): MoveHistoryObject[] => {
     return this.history;
   };
 

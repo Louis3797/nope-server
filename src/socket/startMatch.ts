@@ -9,8 +9,8 @@ import { matchMakingQueues } from '../app';
 import prismaClient from '../config/prisma';
 import GameState from '../model/GameState';
 import config from '../config/config';
-// import type { Prisma } from '@prisma/client';
 import { getTournamentInfo } from '../service/tournament.service';
+import type { Prisma } from '@prisma/client';
 
 interface MatchPlayer {
   id: string;
@@ -76,10 +76,6 @@ const startMatch = async (
       data: { round: { increment: 1 } },
       select: { id: true, round: true, status: true }
     });
-
-    console.log(
-      `Game ${opponents.player1.username} vs. ${opponents.player2.username} round ${match.round}`
-    );
 
     // create game in db and connect players and match
     const createdGame = await prismaClient.game.create({
@@ -205,7 +201,6 @@ const startMatch = async (
             timeout: turnTimeout
           },
           async (err, response) => {
-            console.log('makeMove response', response);
             if (err) {
               // Timeout means the other player wins the game
 
@@ -247,7 +242,6 @@ const startMatch = async (
 
               const conform = game.checkMove(response);
 
-              console.log('checkMove', conform);
               // if move is not conform
               if (!conform) {
                 // handle cheating
@@ -284,7 +278,6 @@ const startMatch = async (
                 // handle conform move
                 const newGameState = game.updateState(response);
 
-                console.log('newGameState', newGameState);
                 if (!newGameState) {
                   // handle cheating
 
@@ -332,8 +325,6 @@ const startMatch = async (
 
     const lastGameState = game.getState();
 
-    console.log('lastGameState', lastGameState);
-
     // update data in players
     if (opponents.player1.id === lastGameState.winner?.id) {
       opponents.player1.points += 1;
@@ -349,8 +340,8 @@ const startMatch = async (
         status: 'FINISHED',
         endedAt: new Date(),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        winner: { connect: { id: lastGameState.winner!.id } }
-        // moveHistory: game.getHistory() as unknown as Prisma.JsonArray
+        winner: { connect: { id: lastGameState.winner!.id } },
+        moveHistory: game.getHistory() as unknown as Prisma.JsonArray
       }
     });
 

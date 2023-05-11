@@ -21,7 +21,7 @@ export const matchmaking = async (
     SocketData
   >,
   tournamentId: string
-) => {
+): Promise<void> => {
   while (true) {
     const queue = matchMakingQueues.get(tournamentId);
 
@@ -49,6 +49,7 @@ export const matchmaking = async (
     const allMatchesEnded = tournamentData.matches.filter(
       (m) => m.status !== 'FINISHED'
     );
+
     if (
       tournamentData.matches.length >= numOfAllMatches &&
       allMatchesEnded.length === 0
@@ -90,7 +91,8 @@ export const matchmaking = async (
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         endedTournamentInfo!
       );
-      console.log('The tournament Ended');
+
+      matchMakingQueues.delete(tournamentId);
       return;
     }
 
@@ -439,9 +441,6 @@ export const matchmaking = async (
                       }
                     };
 
-                    // ! dont await startMatch it will stop
-                    // ! the matchmaking and wait till the match ends
-                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     await startMatch(
                       io,
                       opponents,
