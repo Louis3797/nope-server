@@ -22,8 +22,8 @@ export default class PriorityQueue<T> {
     }
   }
 
-  enqueue(element: T, priority: number) {
-    const queueElement = { element, priority };
+  enqueue(element: T, _priority: number) {
+    const queueElement = { element, priority: 0 };
     this.items.push(queueElement);
     this.bubbleUp(this.items.length - 1);
   }
