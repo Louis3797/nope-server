@@ -25,10 +25,7 @@ export interface IGameState {
   checkMove: (move: Move) => boolean;
   updateState: (move: Move) => State | null;
   isWon: () => boolean;
-  getHistory: () => Array<{
-    move: MoveHistoryObject | null;
-    state: State;
-  }>;
+  getHistory: () => MoveHistoryObject[];
   getState: () => State;
   setWinner: (winner: GamePlayer) => void;
 }
