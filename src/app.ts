@@ -51,6 +51,11 @@ const io = new Server<
   cors: {
     origin: config.cors.origin,
     allowedHeaders: ['GET', 'POST']
+  },
+  connectionStateRecovery: {
+    // default values
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    skipMiddlewares: false
   }
 });
 
@@ -74,7 +79,7 @@ app.use(
   cors({
     // origin is given a array if we want to have multiple origins later
     // origin: String(config.cors.origin).split('|'),
-    origin: '*',
+    origin: config.cors.origin,
     credentials: true
   })
 );
@@ -102,6 +107,10 @@ io.use(isAuthSocket);
 
 io.on('connection', async (socket) => {
   logger.info(`A new client with socket id: ${socket.id} connected`);
+
+  if (socket.recovered) {
+    console.log(`${socket.id} recovered ${JSON.stringify(socket.data)}`);
+  }
 
   io.emit(
     'list:tournaments',
@@ -429,7 +438,10 @@ io.on('connection', async (socket) => {
       });
 
       // check if the client was the last player in the tournament
-      if (tournamentInfo.currentSize === 1) {
+      if (
+        tournamentInfo.currentSize === 1 &&
+        tournamentInfo.status === 'WAITING_FOR_MORE_PLAYERS'
+      ) {
         // delete if last player left
         await prismaClient.tournament.delete({
           where: { id: tournamentId }
@@ -566,7 +578,7 @@ io.on('connection', async (socket) => {
         new PriorityQueue(updatedTournament.players)
       );
 
-      matchmaking(io, tournamentId);
+      await matchmaking(io, tournamentId);
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
@@ -590,14 +602,11 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('disconnecting', () => {
-    // Todo handle this event
     console.log(`${socket.id} is in disconnecting state`);
   });
 
   socket.on('disconnect', () => {
-    logger.info(
-      `Client with socket id: ${socket.id} disconnected from the tournament`
-    );
+    logger.info(`Client with socket id: ${socket.id} disconnected`);
   });
 });
 
