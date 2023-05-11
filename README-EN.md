@@ -92,8 +92,10 @@ POST /v1/verify-email/:token - Verify email
 ├── src
 │   ├── config      # Config Files
 │   ├── controller  # Controllers
+│   ├── error       # Custom Error Classes
 │   ├── interfaces  # Typescript Interfaces
 │   ├── middleware  # Custom Middleware
+│   ├── model       # Models
 │   ├── routes      # Routes
 │   ├── service     # Services
 │   ├── socket      # Websocket specific Code
@@ -128,13 +130,23 @@ If you're interested in the structure of our database, you can take a look at th
 To run this project, you will need to add the following environment variables to your .env file
 
 ```yml
+# App's running environment
+# Possible values: test, production, development
+NODE_ENV=
+
 # App's running port
 PORT=
+
+HOST=
 
 # Cors origin url
 # Example: https://example.com or for multiple origins
 # https://example.com|https://example2.com|https://example3.com or simple * to allow all origins
 CORS_ORIGIN=
+
+# Run node -e "console.log(require('crypto').randomBytes(256).toString('base64'));" in your console to generate a secret
+ACCESS_TOKEN_SECRET=
+ACCESS_TOKEN_EXPIRE=
 
 # database name
 MYSQL_DATABASE=
