@@ -1,5 +1,72 @@
-import type { GameStatus } from '@prisma/client';
-import type { BasicPlayer } from '../interfaces';
+import type { GameStatus, MatchStatus, Player } from '@prisma/client';
+import type { ICard, Move } from '../interfaces/';
+
+// * Payload types
+
+export interface TournamentInfoPayload {
+  message: string;
+  tournamentId: string;
+  currentSize: number;
+  status: GameStatus;
+  players: Array<{
+    id: string;
+    username: string;
+    score: number; // won matches
+  }>;
+
+  winner: {
+    id: string;
+    username: string;
+    score: number;
+  } | null;
+  host: {
+    id: string;
+    username: string;
+  };
+}
+
+export interface MatchInfoPayload {
+  message: string;
+  tournamentId: string;
+  match: {
+    id: string;
+    round: number;
+    bestOf: number;
+    status: MatchStatus;
+    opponents: Array<Pick<Player, 'id' | 'username'> & { points: number }>;
+    winner: (Pick<Player, 'id' | 'username'> & { points: number }) | null;
+  } | null;
+}
+
+export interface GameStatePayload {
+  matchId: string;
+  gameId: string;
+  topCard: ICard;
+  lastTopCard: ICard | null; // card under top card
+  drawPileSize: number;
+  players: Array<{
+    username: string;
+    id: string;
+    handSize: number;
+  }>;
+
+  hand: ICard[];
+  handSize: number;
+  currentPlayer: {
+    username: string;
+    id: string;
+  };
+  currentPlayerIdx: number;
+  prevPlayer: {
+    username: string;
+    id: string;
+  };
+  prevPlayerIdx: number | null;
+  prevTurnCards: ICard[]; // last placed card
+  lastMove: Move | null;
+}
+
+// * Socket types
 
 export type SocketCallback<T> = (response?: SocketResponse<T>) => void;
 
@@ -36,16 +103,32 @@ export interface ServerToClientEvents<isSender extends boolean = false> {
     tournamentId: string;
     currentSize: number;
     bestOf: number;
-    players: Array<Pick<BasicPlayer, 'id' | 'username'>>;
+    players: Array<Pick<Player, 'id' | 'username'>>;
   }) => void;
-  'tournament:info': (message: string) => void;
-  'tournament:status': (message: string) => void;
-  'game:status': (message: string) => void;
-  'game:state': (message: string) => void;
-  'game:makeMove': (
-    arg: number,
-    callback: (...args: WithTimeoutAck<isSender, [string]>) => void
+  'tournament:info': (data: TournamentInfoPayload) => void;
+  'match:invite': (
+    data: {
+      message: string;
+      matchId: string;
+      players: Array<Pick<Player, 'id' | 'username'>>;
+      invitationTimeout: number; // time when the invitation ends. Returns the stored time value in milliseconds since midnight, January 1, 1970 UTC.
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: (...args: WithTimeoutAck<isSender, [MatchInviteResponse]>) => void
   ) => void;
+  'match:info': (data: MatchInfoPayload) => void;
+  'game:makeMove': (
+    data: {
+      message: string;
+      timeout: number;
+    },
+    callback: (...args: WithTimeoutAck<isSender, [Move]>) => void
+  ) => void;
+  'game:state': (data: GameStatePayload) => void;
+  'game:status': (data: {
+    message: string;
+    winner: Pick<Player, 'id' | 'username'> & { points: number };
+  }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -59,7 +142,15 @@ export interface ClientToServerEvents {
   ) => void;
   'tournament:join': (
     tournamentId: string,
-    callback: SocketCallback<null>
+    callback: SocketCallback<{
+      tournamentId: string;
+      currentSize: number;
+      bestOf: number;
+      players: Array<{
+        id: string;
+        username: string;
+      }>;
+    }>
   ) => void;
   'tournament:leave': (callback: SocketCallback<null>) => void;
   'tournament:start': (callback: SocketCallback<null>) => void;
@@ -76,4 +167,9 @@ export interface SocketData {
   };
   gameId?: string; // if player is in a game this id will be defined
   tournamentId?: string; // if player is in tournament this id will be defined
+}
+
+export interface MatchInviteResponse {
+  accepted: boolean;
+  id: string; // player id
 }

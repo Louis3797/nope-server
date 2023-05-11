@@ -58,7 +58,7 @@ model Game {
   players     Player[]   @relation(name: "PlayerToGame")
   match       Match?     @relation(name: "MatchToGame", fields: [matchId], references: [id])
   matchId     String?
-  moveHistory Json
+  moveHistory Json?
   winner      Player?    @relation(name: "Game_Winner_To_User", fields: [winnerId], references: [id])
   winnerId    String?
 }
@@ -69,8 +69,6 @@ model Tournament {
   endedAt             DateTime?
   status              GameStatus
   currentSize         Int
-  isCompleted         Boolean               @default(false)
-  currentRound        Int                   @default(0)
   bestOf              Int                   @default(5) // number of rounds in a match (Best of 5, Best of 3)
   host                Player                @relation(name: "Tournament_To_Host", fields: [hostId], references: [id])
   hostId              String
@@ -100,8 +98,10 @@ model TournamentStatistic {
   playerId      String
   tournament    Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id])
   tournamentId  String
+  matchesPlayed Int        @default(0)
+  wonMatches    Int        @default(0)
+  lostMatches   Int        @default(0)
   gamesPlayed   Int        @default(0)
-  wins          Int        @default(0)
-  losses        Int        @default(0)
-  winPercentage Float      @default(0)
+  wonGames      Int        @default(0)
+  lostGames     Int        @default(0)
 }
