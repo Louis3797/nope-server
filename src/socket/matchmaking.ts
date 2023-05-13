@@ -12,6 +12,7 @@ import { matchMakingQueues } from '../app';
 import { getTournamentInfo } from '../service/tournament.service';
 import startMatch from './startMatch';
 import type { Player } from '@prisma/client';
+import logger from '../middleware/logger';
 
 export const matchmaking = async (
   io: Server<
@@ -35,17 +36,69 @@ export const matchmaking = async (
       select: {
         currentSize: true,
         bestOf: true,
-        matches: { select: { id: true, status: true } }
+        matches: { select: { id: true, status: true } },
+        startedAt: true
       }
     });
 
     // if tournament was not found than quit
     if (!tournamentData) {
+      matchMakingQueues.delete(tournamentId);
       return;
     }
 
+    if (!tournamentData.startedAt) {
+      matchMakingQueues.delete(tournamentId);
+      return;
+    }
+
+    const mysqlDate = new Date(tournamentData.startedAt); // convert MySQL datetime string to JavaScript Date object
+    const now = new Date(); // get current date and time
+
+    const timeSinceTournamentStart = now.getTime() - mysqlDate.getTime(); // calculate difference in milliseconds
+
     const numOfAllMatches =
       (tournamentData.currentSize * (tournamentData.currentSize - 1)) / 2;
+
+    // check if tournament is inactive
+
+    if (queue.size() <= 1) {
+      // queue is empty but 0 games after 2 minutes
+      // all players left after tournament start
+      if (
+        tournamentData.matches.length === 0 &&
+        timeSinceTournamentStart >= config.matchMaking.inactiveTournamentTimeout
+      ) {
+        logger.info(
+          `Tournament: ${tournamentId} has been inactive for 2 minutes with 0 games, therefore it will be removed`
+        );
+        await prismaClient.tournament.delete({
+          where: { id: tournamentId }
+        });
+
+        matchMakingQueues.delete(tournamentId);
+        return;
+      }
+
+      // not all games are played after an amount of time
+
+      // number of all matches matches * (number of BestOf Games * 20min (20 min per game)) = max tournament life time
+      const maxTournamentLifeTime =
+        numOfAllMatches * (tournamentData.bestOf * config.game.maxDuration);
+
+      if (timeSinceTournamentStart >= maxTournamentLifeTime) {
+        logger.info(
+          `Tournament: ${tournamentId} has exceeded the maximum lifetime and will be therefore deleted`
+        );
+        await prismaClient.tournament.delete({
+          where: { id: tournamentId }
+        });
+
+        matchMakingQueues.delete(tournamentId);
+        return;
+      }
+    }
+
     const allMatchesEnded = tournamentData.matches.filter(
       (m) => m.status !== 'FINISHED'
     );
