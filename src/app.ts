@@ -538,7 +538,7 @@ io.on('connection', async (socket) => {
       // update db state
       const updatedTournament = await prismaClient.tournament.update({
         where: { id: tournamentId },
-        data: { status: 'IN_PROGRESS' },
+        data: { status: 'IN_PROGRESS', startedAt: new Date() },
         select: {
           id: true,
           players: { select: { id: true, username: true } }

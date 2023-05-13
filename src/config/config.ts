@@ -47,10 +47,12 @@ const config = {
   },
   matchMaking: {
     timeoutInterval: 5000, // 5 sec
-    invitationTimeout: 10000 // 10 sec
+    invitationTimeout: 10000, // 10 sec
+    inactiveTournamentTimeout: 120000 // 2 minutes
   },
   game: {
-    turnTimeout: 10000 // 10 sec
+    turnTimeout: 10000, // 10 sec
+    maxDuration: 1_200_000
   }
 } as const;
 
