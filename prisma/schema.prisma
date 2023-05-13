@@ -56,10 +56,10 @@ model Game {
   playerCount Int // Stores number of players that already joined
   private     Boolean    @default(false)
   players     Player[]   @relation(name: "PlayerToGame")
-  match       Match?     @relation(name: "MatchToGame", fields: [matchId], references: [id])
+  match       Match?     @relation(name: "MatchToGame", fields: [matchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   matchId     String?
   moveHistory Json?
-  winner      Player?    @relation(name: "Game_Winner_To_User", fields: [winnerId], references: [id])
+  winner      Player?    @relation(name: "Game_Winner_To_User", fields: [winnerId], references: [id], onUpdate: Cascade)
   winnerId    String?
 }
 
@@ -67,15 +67,16 @@ model Tournament {
   id                  String                @id @default(cuid())
   createdAt           DateTime              @default(now())
   endedAt             DateTime?
+  startedAt           DateTime?
   status              GameStatus
   currentSize         Int
   bestOf              Int                   @default(5) // number of rounds in a match (Best of 5, Best of 3)
-  host                Player                @relation(name: "Tournament_To_Host", fields: [hostId], references: [id])
+  host                Player                @relation(name: "Tournament_To_Host", fields: [hostId], references: [id], onUpdate: Cascade)
   hostId              String
   players             Player[]              @relation(name: "PlayerToTournament")
   matches             Match[]               @relation(name: "MatchToTournament")
   tournamentStatistic TournamentStatistic[] @relation(name: "TournamentToTournamentStatistic")
-  winner              Player?               @relation(name: "Tournament_Winner_To_User", fields: [winnerId], references: [id])
+  winner              Player?               @relation(name: "Tournament_Winner_To_User", fields: [winnerId], references: [id], onUpdate: Cascade)
   winnerId            String?
 }
 
@@ -84,19 +85,19 @@ model Match {
   round        Int
   status       MatchStatus @default(PENDING)
   createdAt    DateTime    @default(now())
-  tournament   Tournament  @relation(name: "MatchToTournament", fields: [tournamentId], references: [id])
+  tournament   Tournament  @relation(name: "MatchToTournament", fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tournamentId String
   games        Game[]      @relation(name: "MatchToGame")
-  winner       Player?     @relation(name: "Match_Winner_To_User", fields: [winnerId], references: [id])
+  winner       Player?     @relation(name: "Match_Winner_To_User", fields: [winnerId], references: [id], onUpdate: Cascade)
   winnerId     String?
   opponents    Player[]    @relation(name: "Match_To_User")
 }
 
 model TournamentStatistic {
   id            String     @id @default(cuid())
-  player        Player     @relation(name: "PlayerToTournamentStatistic", fields: [playerId], references: [id])
+  player        Player     @relation(name: "PlayerToTournamentStatistic", fields: [playerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   playerId      String
-  tournament    Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id])
+  tournament    Tournament @relation(name: "TournamentToTournamentStatistic", fields: [tournamentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tournamentId  String
   matchesPlayed Int        @default(0)
   wonMatches    Int        @default(0)
