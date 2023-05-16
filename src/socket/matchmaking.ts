@@ -152,8 +152,10 @@ export const matchmaking = async (
     if (queue.size() >= 2) {
       // check if all matches are played
 
+      // eslint-disable-next-line prefer-const
       let player1Priority = queue.frontPriority()!;
       const player1 = queue.dequeue()!;
+      // eslint-disable-next-line prefer-const
       let player2Priority = queue.frontPriority()!;
       const player2 = queue.dequeue()!;
 
@@ -222,289 +224,350 @@ export const matchmaking = async (
             select: { id: true }
           });
 
+          const updatedMatch = await prismaClient.match.update({
+            where: { id: match.id },
+            data: { status: 'IN_PROGRESS' },
+            select: {
+              id: true,
+              opponents: { select: { id: true, username: true } },
+              winner: { select: { id: true, username: true } },
+              round: true,
+              status: true
+            }
+          });
+
+          const playerData: Array<
+            Pick<Player, 'id' | 'username'> & { points: number }
+          > = [];
+
+          for (const player of updatedMatch.opponents) {
+            playerData.push(Object.assign(player, { points: 0 }));
+          }
+          // both accepted
+          socketPlayer1.join(`tournament-match:${match.id}`);
+          socketPlayer2.join(`tournament-match:${match.id}`);
+
+          io.to([socketPlayer1.id, socketPlayer2.id]).emit('match:info', {
+            message: 'Please wait for the match to start',
+            tournamentId,
+            match: {
+              id: updatedMatch.id,
+              round: updatedMatch.round,
+              bestOf: tournamentData.bestOf,
+              status: updatedMatch.status,
+              winner: null,
+              opponents: playerData
+            }
+          });
+
+          const opponents = {
+            player1: {
+              id: player1.id,
+              username: player1.username,
+              socket: socketPlayer1,
+              points: 0,
+              priority: player1Priority
+            },
+            player2: {
+              id: player2.id,
+              username: player2.username,
+              socket: socketPlayer2,
+              points: 0,
+              priority: player2Priority
+            }
+          };
+
+          await startMatch(
+            io,
+            opponents,
+            tournamentId,
+            match.id,
+            tournamentData.bestOf
+          );
+
           // send invite to players
 
-          const invitationTimeout = new Date(
-            new Date().getTime() + config.matchMaking.invitationTimeout
-          ).getTime();
+          // const invitationTimeout = new Date(
+          //   new Date().getTime() + config.matchMaking.invitationTimeout
+          // ).getTime();
 
-          // send invite to both clients
-          io.to([socketPlayer1.id, socketPlayer2.id])
-            .timeout(config.matchMaking.invitationTimeout)
-            .emit(
-              'match:invite',
-              {
-                message: 'Your invited to a match',
-                matchId: match.id,
-                players: [
-                  {
-                    id: player1.id,
-                    username: player1.username
-                  },
-                  {
-                    id: player2.id,
-                    username: player2.username
-                  }
-                ],
-                invitationTimeout
-              },
-              async (err, responses) => {
-                if (err) {
-                  // some clients did not acknowledge the event in the given delay
-                  // check if both does not acknowledge
-                  // check if only one does not acknowledge
+          // // send invite to both clients
+          // io.to([socketPlayer1.id, socketPlayer2.id])
+          //   .timeout(config.matchMaking.invitationTimeout)
+          //   .emit(
+          //     'match:invite',
+          //     {
+          //       message: 'Your invited to a match',
+          //       matchId: match.id,
+          //       players: [
+          //         {
+          //           id: player1.id,
+          //           username: player1.username
+          //         },
+          //         {
+          //           id: player2.id,
+          //           username: player2.username
+          //         }
+          //       ],
+          //       invitationTimeout
+          //     },
+          //     async (err, responses) => {
+          //       if (err) {
+          //         // some clients did not acknowledge the event in the given delay
+          //         // check if both does not acknowledge
+          //         // check if only one does not acknowledge
 
-                  // delete match
-                  await prismaClient.match.delete({
-                    where: { id: match.id }
-                  });
+          //         // delete match
+          //         await prismaClient.match.delete({
+          //           where: { id: match.id }
+          //         });
 
-                  io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                    'match:info',
-                    {
-                      message:
-                        'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
-                      tournamentId,
-                      match: null
-                    }
-                  );
+          //         io.to([socketPlayer1.id, socketPlayer2.id]).emit(
+          //           'match:info',
+          //           {
+          //             message:
+          //               'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
+          //             tournamentId,
+          //             match: null
+          //           }
+          //         );
 
-                  if (responses.length === 1 && responses[0]?.id) {
-                    // One client acknowledged the invite
-                    const checkId =
-                      responses[0].id === player1.id
-                        ? player1.id
-                        : responses[0].id === player2.id
-                        ? player2.id
-                        : undefined;
+          //         if (responses.length === 1 && responses[0]?.id) {
+          //           // One client acknowledged the invite
+          //           const checkId =
+          //             responses[0].id === player1.id
+          //               ? player1.id
+          //               : responses[0].id === player2.id
+          //               ? player2.id
+          //               : undefined;
 
-                    // check received id
-                    if (!checkId) {
-                      queue.enqueue(player1, player1Priority + 1);
-                      queue.enqueue(player2, player2Priority + 1);
-                    } else {
-                      player1Priority += checkId === player1.id ? 1 : 2;
-                      player2Priority += checkId === player2.id ? 1 : 2;
+          //           // check received id
+          //           if (!checkId) {
+          //             queue.enqueue(player1, player1Priority + 1);
+          //             queue.enqueue(player2, player2Priority + 1);
+          //           } else {
+          //             player1Priority += checkId === player1.id ? 1 : 2;
+          //             player2Priority += checkId === player2.id ? 1 : 2;
 
-                      queue.enqueue(player1, player1Priority);
-                      queue.enqueue(player2, player2Priority);
-                    }
-                    // client did accept
-                  } else {
-                    // Both clients did not acknowledge
+          //             queue.enqueue(player1, player1Priority);
+          //             queue.enqueue(player2, player2Priority);
+          //           }
+          //           // client did accept
+          //         } else {
+          //           // Both clients did not acknowledge
 
-                    // Add the players back to the queue with the same priority
-                    queue.enqueue(player1, player1Priority + 2);
-                    queue.enqueue(player2, player2Priority + 2);
-                  }
-                } else {
-                  // if both clients does acknowledge
+          //           // Add the players back to the queue with the same priority
+          //           queue.enqueue(player1, player1Priority + 2);
+          //           queue.enqueue(player2, player2Priority + 2);
+          //         }
+          //       } else {
+          //         // if both clients does acknowledge
 
-                  // check if a client rejected the invitation
-                  if (!responses[0]?.accepted && !responses[1]?.accepted) {
-                    // both rejected the invitation put them back in the queue
+          //         // check if a client rejected the invitation
+          //         if (!responses[0]?.accepted && !responses[1]?.accepted) {
+          //           // both rejected the invitation put them back in the queue
 
-                    // delete match
-                    await prismaClient.match.delete({
-                      where: { id: match.id }
-                    });
+          //           // delete match
+          //           await prismaClient.match.delete({
+          //             where: { id: match.id }
+          //           });
 
-                    io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                      'match:info',
-                      {
-                        message:
-                          'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
-                        tournamentId,
-                        match: null
-                      }
-                    );
-                    // Add the players back to the queue with the same priority
+          //           io.to([socketPlayer1.id, socketPlayer2.id]).emit(
+          //             'match:info',
+          //             {
+          //               message:
+          //                 'You and your opponent rejected the invite, therefore both of you will be put back in the matchmaking queue',
+          //               tournamentId,
+          //               match: null
+          //             }
+          //           );
+          //           // Add the players back to the queue with the same priority
 
-                    queue.enqueue(player1, player1Priority + 1);
-                    queue.enqueue(player2, player2Priority + 1);
-                  } else if (
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                    (responses[0]?.accepted && !responses[1]?.accepted) ||
-                    (!responses[0]?.accepted && responses[1]?.accepted)
-                  ) {
-                    // one client rejected the invite
+          //           queue.enqueue(player1, player1Priority + 1);
+          //           queue.enqueue(player2, player2Priority + 1);
+          //         } else if (
+          //           // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+          //           (responses[0]?.accepted && !responses[1]?.accepted) ||
+          //           (!responses[0]?.accepted && responses[1]?.accepted)
+          //         ) {
+          //           // one client rejected the invite
 
-                    const winnerId = responses[0]?.accepted
-                      ? responses[0].id
-                      : responses[1]?.id;
+          //           const winnerId = responses[0]?.accepted
+          //             ? responses[0].id
+          //             : responses[1]?.id;
 
-                    if (
-                      !winnerId ||
-                      (winnerId !== player1.id && winnerId !== player2.id)
-                    ) {
-                      io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                        'match:info',
-                        {
-                          message:
-                            'An error appeared you will be put back into the matchmaking queue',
-                          tournamentId,
-                          match: null
-                        }
-                      );
+          //           if (
+          //             !winnerId ||
+          //             (winnerId !== player1.id && winnerId !== player2.id)
+          //           ) {
+          //             io.to([socketPlayer1.id, socketPlayer2.id]).emit(
+          //               'match:info',
+          //               {
+          //                 message:
+          //                   'An error appeared you will be put back into the matchmaking queue',
+          //                 tournamentId,
+          //                 match: null
+          //               }
+          //             );
 
-                      queue.enqueue(player1, player1Priority + 1);
-                      queue.enqueue(player2, player2Priority + 1);
-                    } else {
-                      // update match winner
-                      const updatedMatch = await prismaClient.match.update({
-                        where: { id: match.id },
-                        data: {
-                          status: 'FINISHED',
-                          winner: { connect: { id: winnerId } }
-                        },
-                        select: {
-                          id: true,
-                          opponents: { select: { id: true, username: true } },
-                          winner: { select: { id: true, username: true } },
-                          round: true,
-                          status: true
-                        }
-                      });
+          //             queue.enqueue(player1, player1Priority + 1);
+          //             queue.enqueue(player2, player2Priority + 1);
+          //           } else {
+          //             // update match winner
+          //             const updatedMatch = await prismaClient.match.update({
+          //               where: { id: match.id },
+          //               data: {
+          //                 status: 'FINISHED',
+          //                 winner: { connect: { id: winnerId } }
+          //               },
+          //               select: {
+          //                 id: true,
+          //                 opponents: { select: { id: true, username: true } },
+          //                 winner: { select: { id: true, username: true } },
+          //                 round: true,
+          //                 status: true
+          //               }
+          //             });
 
-                      // find tournamentStatistic of players for the current tournament
-                      const statistic =
-                        await prismaClient.tournamentStatistic.findFirst({
-                          where: {
-                            AND: [
-                              {
-                                playerId: winnerId
-                              },
-                              {
-                                tournamentId
-                              }
-                            ]
-                          },
-                          select: {
-                            id: true,
-                            player: { select: { username: true } }
-                          }
-                        });
+          //             // find tournamentStatistic of players for the current tournament
+          //             const statistic =
+          //               await prismaClient.tournamentStatistic.findFirst({
+          //                 where: {
+          //                   AND: [
+          //                     {
+          //                       playerId: winnerId
+          //                     },
+          //                     {
+          //                       tournamentId
+          //                     }
+          //                   ]
+          //                 },
+          //                 select: {
+          //                   id: true,
+          //                   player: { select: { username: true } }
+          //                 }
+          //               });
 
-                      // update the statistic
-                      await prismaClient.tournamentStatistic.update({
-                        where: {
-                          id: statistic!.id
-                        },
-                        data: {
-                          wonMatches: { increment: 1 }
-                        }
-                      });
+          //             // update the statistic
+          //             await prismaClient.tournamentStatistic.update({
+          //               where: {
+          //                 id: statistic!.id
+          //               },
+          //               data: {
+          //                 wonMatches: { increment: 1 }
+          //               }
+          //             });
 
-                      const winner: Pick<Player, 'id' | 'username'> & {
-                        points: number;
-                      } = Object.assign(updatedMatch.winner!, { points: 0 });
+          //             const winner: Pick<Player, 'id' | 'username'> & {
+          //               points: number;
+          //             } = Object.assign(updatedMatch.winner!, { points: 0 });
 
-                      const playerData: Array<
-                        Pick<Player, 'id' | 'username'> & { points: number }
-                      > = [];
+          //             const playerData: Array<
+          //               Pick<Player, 'id' | 'username'> & { points: number }
+          //             > = [];
 
-                      for (const player of updatedMatch.opponents) {
-                        playerData.push(Object.assign(player, { points: 0 }));
-                      }
+          //             for (const player of updatedMatch.opponents) {
+          //               playerData.push(Object.assign(player, { points: 0 }));
+          //             }
 
-                      io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                        'match:info',
-                        {
-                          message: `${statistic?.player.username} won the game, because his opponent rejected the match invitation.`,
-                          tournamentId,
-                          match: {
-                            id: updatedMatch.id,
-                            round: updatedMatch.round,
-                            bestOf: tournamentData.bestOf,
-                            status: updatedMatch.status,
-                            winner,
-                            opponents: playerData
-                          }
-                        }
-                      );
+          //             io.to([socketPlayer1.id, socketPlayer2.id]).emit(
+          //               'match:info',
+          //               {
+          //                 message: `${statistic?.player.username} won the game, because his opponent rejected the match invitation.`,
+          //                 tournamentId,
+          //                 match: {
+          //                   id: updatedMatch.id,
+          //                   round: updatedMatch.round,
+          //                   bestOf: tournamentData.bestOf,
+          //                   status: updatedMatch.status,
+          //                   winner,
+          //                   opponents: playerData
+          //                 }
+          //               }
+          //             );
 
-                      // Send tournament info with new score
-                      const tInfo = await getTournamentInfo(
-                        tournamentId,
-                        `${statistic?.player.username} won the game bc the opponent rejected the match invitation.`
-                      );
+          //             // Send tournament info with new score
+          //             const tInfo = await getTournamentInfo(
+          //               tournamentId,
+          //               `${statistic?.player.username} won the game bc the opponent rejected the match invitation.`
+          //             );
 
-                      io.in(`tournament:${tournamentId}`)
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        .emit('tournament:info', tInfo!);
+          //             io.in(`tournament:${tournamentId}`)
+          //               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          //               .emit('tournament:info', tInfo!);
 
-                      queue.enqueue(player1, player1Priority + 1);
-                      queue.enqueue(player2, player2Priority + 1);
-                    }
-                  } else {
-                    const updatedMatch = await prismaClient.match.update({
-                      where: { id: match.id },
-                      data: { status: 'IN_PROGRESS' },
-                      select: {
-                        id: true,
-                        opponents: { select: { id: true, username: true } },
-                        winner: { select: { id: true, username: true } },
-                        round: true,
-                        status: true
-                      }
-                    });
+          //             queue.enqueue(player1, player1Priority + 1);
+          //             queue.enqueue(player2, player2Priority + 1);
+          //           }
+          //         } else {
+          //           const updatedMatch = await prismaClient.match.update({
+          //             where: { id: match.id },
+          //             data: { status: 'IN_PROGRESS' },
+          //             select: {
+          //               id: true,
+          //               opponents: { select: { id: true, username: true } },
+          //               winner: { select: { id: true, username: true } },
+          //               round: true,
+          //               status: true
+          //             }
+          //           });
 
-                    const playerData: Array<
-                      Pick<Player, 'id' | 'username'> & { points: number }
-                    > = [];
+          //           const playerData: Array<
+          //             Pick<Player, 'id' | 'username'> & { points: number }
+          //           > = [];
 
-                    for (const player of updatedMatch.opponents) {
-                      playerData.push(Object.assign(player, { points: 0 }));
-                    }
-                    // both accepted
-                    socketPlayer1.join(`tournament-match:${match.id}`);
-                    socketPlayer2.join(`tournament-match:${match.id}`);
+          //           for (const player of updatedMatch.opponents) {
+          //             playerData.push(Object.assign(player, { points: 0 }));
+          //           }
+          //           // both accepted
+          //           socketPlayer1.join(`tournament-match:${match.id}`);
+          //           socketPlayer2.join(`tournament-match:${match.id}`);
 
-                    io.to([socketPlayer1.id, socketPlayer2.id]).emit(
-                      'match:info',
-                      {
-                        message:
-                          'You accepted the invite. Please wait for the match to start',
-                        tournamentId,
-                        match: {
-                          id: updatedMatch.id,
-                          round: updatedMatch.round,
-                          bestOf: tournamentData.bestOf,
-                          status: updatedMatch.status,
-                          winner: null,
-                          opponents: playerData
-                        }
-                      }
-                    );
+          //           io.to([socketPlayer1.id, socketPlayer2.id]).emit(
+          //             'match:info',
+          //             {
+          //               message:
+          //                 'You accepted the invite. Please wait for the match to start',
+          //               tournamentId,
+          //               match: {
+          //                 id: updatedMatch.id,
+          //                 round: updatedMatch.round,
+          //                 bestOf: tournamentData.bestOf,
+          //                 status: updatedMatch.status,
+          //                 winner: null,
+          //                 opponents: playerData
+          //               }
+          //             }
+          //           );
 
-                    const opponents = {
-                      player1: {
-                        id: player1.id,
-                        username: player1.username,
-                        socket: socketPlayer1,
-                        points: 0,
-                        priority: player1Priority
-                      },
-                      player2: {
-                        id: player2.id,
-                        username: player2.username,
-                        socket: socketPlayer2,
-                        points: 0,
-                        priority: player2Priority
-                      }
-                    };
+          //           const opponents = {
+          //             player1: {
+          //               id: player1.id,
+          //               username: player1.username,
+          //               socket: socketPlayer1,
+          //               points: 0,
+          //               priority: player1Priority
+          //             },
+          //             player2: {
+          //               id: player2.id,
+          //               username: player2.username,
+          //               socket: socketPlayer2,
+          //               points: 0,
+          //               priority: player2Priority
+          //             }
+          //           };
 
-                    await startMatch(
-                      io,
-                      opponents,
-                      tournamentId,
-                      match.id,
-                      tournamentData.bestOf
-                    );
-                  }
-                }
-              }
-            );
+          //           await startMatch(
+          //             io,
+          //             opponents,
+          //             tournamentId,
+          //             match.id,
+          //             tournamentData.bestOf
+          //           );
+          //         }
+          //       }
+          //     }
+          //   );
         }
       }
     }
