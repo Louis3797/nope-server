@@ -103,6 +103,15 @@ export const matchmaking = async (
       (m) => m.status !== 'FINISHED'
     );
 
+    logger.info(`tournament: ${tournamentId}, queue size`, queue.size());
+    logger.log(`tournament: ${tournamentId}, allMatchesEnded`, allMatchesEnded);
+    logger.log(`tournament: ${tournamentId}, numOfAllMatches`, numOfAllMatches);
+    logger.log(
+      `tournament: ${tournamentId}, tournamentData.matches.length >= numOfAllMatches &&allMatchesEnded.length === 0`,
+      tournamentData.matches.length >= numOfAllMatches &&
+        allMatchesEnded.length === 0
+    );
+
     if (
       tournamentData.matches.length >= numOfAllMatches &&
       allMatchesEnded.length === 0
@@ -144,6 +153,8 @@ export const matchmaking = async (
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         endedTournamentInfo!
       );
+
+      logger.info(`The tournament: ${tournamentId} ended`);
 
       matchMakingQueues.delete(tournamentId);
       return;
