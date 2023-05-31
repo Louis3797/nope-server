@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/prefer-readonly */
-import { shuffle } from '../utils';
 import type {
   GamePlayer,
   ICard,
@@ -10,6 +8,12 @@ import type {
   MoveHistoryObject,
   State
 } from '../interfaces';
+import {
+  indexOfCardInHand,
+  isCardInHand,
+  sameCardColor,
+  shuffle
+} from '../utils';
 import { v4 } from 'uuid';
 
 export default class GameState implements IGameState {
@@ -17,8 +21,7 @@ export default class GameState implements IGameState {
   private readonly state: State;
 
   // Counter for the move history
-  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
-  private moveNumber: number = 1;
+  private moveNumber = 1;
 
   // Stores each move of the players
   private readonly history: MoveHistoryObject[] = [];
@@ -43,7 +46,10 @@ export default class GameState implements IGameState {
     // also put top card on discardPile
     this.state.discardPile.unshift(this.state.topCard);
 
-    this.nextPlayer();
+    this.state.currentPlayerIdx = 0;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const next = this.state.players[this.state.currentPlayerIdx]!;
+    this.state.currentPlayer = { id: next?.id, username: next?.username };
   }
 
   /**
@@ -52,10 +58,12 @@ export default class GameState implements IGameState {
    * @returns Returns true by conform move, otherwise false
    */
   checkMove = (move: Move): boolean => {
-    switch (move.type) {
+    console.log('move', move);
+    switch (move?.type) {
       case 'take':
         return this.checkTake(move);
       case 'put':
+        console.log('put');
         return this.checkPut(move);
       case 'nope':
         return this.checkNope(move);
@@ -72,12 +80,17 @@ export default class GameState implements IGameState {
     if (lastMove && lastMove.type === 'take') return false;
     // true if player defined no cards in his move and also has no cards in his hand he can place
 
+    console.log(this.canPlaceCard());
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     return !(move.card1 || move.card2 || move.card3) && !this.canPlaceCard();
   };
 
   private checkPut = (move: Move): boolean => {
+    console.log(this.state.currentPlayer);
     const { currentPlayerIdx, players, topCard } = this.state;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const currentPlayerHand = players[currentPlayerIdx!]!.hand;
+
     if (!topCard) return false;
 
     if (!move.card1 || currentPlayerHand.length < 1) {
@@ -92,12 +105,12 @@ export default class GameState implements IGameState {
 
     if (card1 && !card2 && !card3) {
       if (!this.isConformCard(card1)) return false; // not a conform card
-      if (topCardValue !== 1 || !card1.color?.includes(topCardColor)) {
+
+      if (topCardValue !== 1 || !sameCardColor(topCard, card1)) {
         return false; // not enough cards or not the right color
       }
-      const card1InHand = currentPlayerHand.some(
-        (c) => c.color === card1.color && c.value === card1.value
-      );
+
+      const card1InHand = isCardInHand(card1, currentPlayerHand);
       return card1InHand; // true if player has the card in his hand
     }
     if (card1 && card2 && !card3) {
@@ -106,20 +119,19 @@ export default class GameState implements IGameState {
       }
       if (
         topCardValue !== 2 ||
-        !card1.color?.includes(topCardColor) ||
-        !card2.color?.includes(topCardColor)
+        !sameCardColor(topCard, card1) ||
+        !sameCardColor(topCard, card2)
       ) {
         return false; // false amount of placed cards or false color
       }
-      const card1InHand = currentPlayerHand.some(
-        (c) => c.color === card1.color && c.value === card1.value
-      );
-      const card2InHand = currentPlayerHand.some(
-        (c) => c.color === card2.color && c.value === card2.value
-      );
+      const card1InHand = isCardInHand(card1, currentPlayerHand);
+      const card2InHand = isCardInHand(card2, currentPlayerHand);
       return card1InHand && card2InHand; // true if player has specified cards in hand
     }
     if (card1 && card2 && card3) {
+      console.log('this.isConformCard(card1)', this.isConformCard(card1));
+      console.log('this.isConformCard(card2)', this.isConformCard(card2));
+      console.log('this.isConformCard(card3)', this.isConformCard(card2));
       if (
         !this.isConformCard(card1) ||
         !this.isConformCard(card2) ||
@@ -127,23 +139,45 @@ export default class GameState implements IGameState {
       ) {
         return false; // not a conform card
       }
+
+      console.log('topcard value', topCardValue);
+      console.log(
+        'sameCardColor(topCard, card1)',
+        sameCardColor(topCard, card1)
+      );
+      console.log(
+        'sameCardColor(topCard, card2)',
+        sameCardColor(topCard, card2)
+      );
+      console.log(
+        'sameCardColor(topCard, card3)',
+        sameCardColor(topCard, card3)
+      );
       if (
         topCardValue !== 3 ||
-        !card1.color?.includes(topCardColor) ||
-        !card2.color?.includes(topCardColor) ||
-        !card3.color?.includes(topCardColor)
+        !sameCardColor(topCard, card1) ||
+        !sameCardColor(topCard, card2) ||
+        !sameCardColor(topCard, card3)
       ) {
         return false; // false amount of placed cards or false color
       }
-      const card1InHand = currentPlayerHand.some(
-        (c) => c.color === card1.color && c.value === card1.value
+
+      console.log(
+        'isCardInHand(card1, currentPlayerHand)',
+        isCardInHand(card1, currentPlayerHand)
       );
-      const card2InHand = currentPlayerHand.some(
-        (c) => c.color === card2.color && c.value === card2.value
+      console.log(
+        'isCardInHand(card2 currentPlayerHand)',
+        isCardInHand(card2, currentPlayerHand)
       );
-      const card3InHand = currentPlayerHand.some(
-        (c) => c.color === card3.color && c.value === card3.value
+      console.log(
+        'isCardInHand(card3, currentPlayerHand)',
+        isCardInHand(card3, currentPlayerHand)
       );
+      const card1InHand = isCardInHand(card1, currentPlayerHand);
+      const card2InHand = isCardInHand(card2, currentPlayerHand);
+      const card3InHand = isCardInHand(card3, currentPlayerHand);
+
       return card1InHand && card2InHand && card3InHand; // true if player has specified cards in hand
     }
     return false; // fallback
@@ -157,6 +191,7 @@ export default class GameState implements IGameState {
     // if null or last move was not a take return false
     if (!lastMove || lastMove.type !== 'take') return false;
     // check if cards are all null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     if (move.card1 || move.card2 || move.card3) return false;
 
     if (this.canPlaceCard()) {
@@ -174,6 +209,8 @@ export default class GameState implements IGameState {
   updateState = (move: Move): State | null => {
     const compliant = this.checkMove(move);
 
+    console.log('compliant move', compliant);
+
     this.updateHistory(move, compliant);
     if (!compliant) return null;
 
@@ -187,11 +224,12 @@ export default class GameState implements IGameState {
     } = this.state;
 
     // get currentPlayer
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const currentPlayer = players[currentPlayerIdx! % players.length];
 
     if (!currentPlayer) return null; // currentPlayer is null
 
-    switch (move.type) {
+    switch (move?.type) {
       case 'take':
         // check if drawPile is empty
         if (!drawPile.length) {
@@ -199,6 +237,7 @@ export default class GameState implements IGameState {
         }
 
         // Give currentPlayer a card
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         currentPlayer.hand.push(drawPile.shift()!); // drawPile must be full, bc we refilled at the beginning of put when not
         prevTurnCards.splice(0, prevTurnCards.length); // empty prevTurnCards
 
@@ -218,7 +257,7 @@ export default class GameState implements IGameState {
 
         // remove cards from player hand
         if (card1 && !card2 && !card3) {
-          const index = currentPlayer.hand.indexOf(card1);
+          const index = indexOfCardInHand(card1, currentPlayer.hand);
           if (index !== -1) {
             currentPlayer.hand.splice(index, 1);
           } else {
@@ -227,7 +266,7 @@ export default class GameState implements IGameState {
             return null;
           }
         } else if (card1 && card2 && !card3) {
-          const index1 = currentPlayer.hand.indexOf(card1);
+          const index1 = indexOfCardInHand(card1, currentPlayer.hand);
 
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
@@ -236,7 +275,7 @@ export default class GameState implements IGameState {
             this.state.lastMove = move;
             return null;
           }
-          const index2 = currentPlayer.hand.indexOf(card2);
+          const index2 = indexOfCardInHand(card2, currentPlayer.hand);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
           } else {
@@ -245,7 +284,7 @@ export default class GameState implements IGameState {
             return null;
           }
         } else if (card1 && card2 && card3) {
-          const index1 = currentPlayer.hand.indexOf(card1);
+          const index1 = indexOfCardInHand(card1, currentPlayer.hand);
 
           if (index1 !== -1) {
             currentPlayer.hand.splice(index1, 1);
@@ -254,7 +293,7 @@ export default class GameState implements IGameState {
             this.state.lastMove = move;
             return null;
           }
-          const index2 = currentPlayer.hand.indexOf(card2);
+          const index2 = indexOfCardInHand(card2, currentPlayer.hand);
           if (index2 !== -1) {
             currentPlayer.hand.splice(index2, 1);
           } else {
@@ -262,7 +301,7 @@ export default class GameState implements IGameState {
             this.state.lastMove = move;
             return null;
           }
-          const index3 = currentPlayer.hand.indexOf(card3);
+          const index3 = indexOfCardInHand(card3, currentPlayer.hand);
           if (index3 !== -1) {
             currentPlayer.hand.splice(index3, 1);
           } else {
@@ -292,7 +331,11 @@ export default class GameState implements IGameState {
         this.state.topCard = discardPile.shift() ?? null;
 
         // Next players turn
+
+        console.log('call next player');
         this.nextPlayer();
+
+        console.log('next one', this.state.currentPlayer);
         // update last move
         this.state.lastMove = move;
         return this.state;
@@ -388,30 +431,35 @@ export default class GameState implements IGameState {
   };
 
   private nextPlayer = (): void => {
+    console.log('next player');
     const { players } = this.state;
 
+    console.log('players.length)', players.length);
+    console.log('old this.state.currentPlayerIdx', this.state.currentPlayerIdx);
     if (players.length > 0) {
-      // first call
-      if (!this.state.currentPlayerIdx) {
-        this.state.currentPlayerIdx = 0;
-        const next = players[this.state.currentPlayerIdx % players.length]!;
-        this.state.currentPlayer = { id: next?.id, username: next?.username };
-        return;
-      }
-
       // make last current player to prev player
       this.state.prevPlayerIdx = this.state.currentPlayerIdx;
       this.state.prevPlayer = this.state.currentPlayer;
 
       // get new idx of current player
       this.state.currentPlayerIdx =
-        (this.state.currentPlayerIdx + this.state.direction) % players.length;
+        (this.state.currentPlayerIdx! + this.state.direction) % players.length;
+
+      console.log(
+        'new this.state.currentPlayerIdx',
+        this.state.currentPlayerIdx
+      );
 
       // get player
       const next = players[this.state.currentPlayerIdx % players.length]!;
 
+      console.log('next', next);
+
       // set current player
       this.state.currentPlayer = { id: next?.id, username: next?.username };
+
+      console.log('currentplayer switched');
+      console.log('currentPlayer', this.state.currentPlayer);
     }
   };
 
@@ -427,7 +475,7 @@ export default class GameState implements IGameState {
       const newDiscardPile: ICard[] = [];
 
       // get top card
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       const topCard: ICard = discardPile.shift()!;
       const lastTopCard = discardPile.shift();
 
@@ -453,7 +501,9 @@ export default class GameState implements IGameState {
    * @returns Returns true if only one player has cards in his hand
    */
   isWon = (): boolean => {
-    const notEmptyHands = this.state.players.filter((p) => p.hand.length !== 0);
+    const notEmptyHands = this.state.players.filter(
+      (p: { hand: ICard[] }) => p.hand.length !== 0
+    );
 
     // if one player has not an empty hand than he has won the game
 
@@ -474,13 +524,11 @@ export default class GameState implements IGameState {
     const topCard = this.state.topCard;
     if (topCard) {
       const topCardValue = topCard.value!;
-      const topCardColor = topCard.color!;
 
-      const currPlayer = this.state.players.find(
-        (p) => p.id === this.state.currentPlayer?.id
-      )!;
-      const placeableCards = currPlayer.hand.filter((card) =>
-        topCardColor.includes(card.color!)
+      const currPlayer = this.state.players[this.state.currentPlayerIdx!]!;
+
+      const placeableCards = currPlayer.hand.filter((card: ICard) =>
+        sameCardColor(topCard, card)
       );
       return placeableCards.length >= topCardValue;
     }
@@ -507,6 +555,7 @@ export default class GameState implements IGameState {
     if (!card.color || card.color === 'multi') return false;
 
     // check if other values are not set to null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     if (card.select || card.selectValue || card.selectedColor) return false;
     return true;
   };
