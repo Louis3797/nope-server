@@ -214,14 +214,8 @@ export default class GameState implements IGameState {
     this.updateHistory(move, compliant);
     if (!compliant) return null;
 
-    const {
-      players,
-      currentPlayerIdx,
-      drawPile,
-      topCard,
-      discardPile,
-      prevTurnCards
-    } = this.state;
+    const { players, currentPlayerIdx, drawPile, discardPile, prevTurnCards } =
+      this.state;
 
     // get currentPlayer
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -327,8 +321,8 @@ export default class GameState implements IGameState {
           discardPile.unshift(card3);
         }
 
-        this.state.lastTopCard = topCard;
         this.state.topCard = discardPile.shift() ?? null;
+        this.state.lastTopCard = discardPile.at(1) ?? null;
 
         // Next players turn
 
