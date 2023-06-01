@@ -97,9 +97,7 @@ export default class GameState implements IGameState {
       return false; // first card is not defined or hand is empty;
     }
 
-    const { value: topCardValue, color: topCardColor } = topCard;
-
-    if (!topCardColor) return false; // top card not defined
+    const { value: topCardValue } = topCard;
 
     const { card1, card2, card3 } = move;
 
@@ -373,7 +371,6 @@ export default class GameState implements IGameState {
       { value: 3, count: 3 }
     ];
 
-    // Todo add the other cards
     const doubleColorCards: ICard[] = [
       'red-yellow',
       'blue-green',
@@ -399,14 +396,14 @@ export default class GameState implements IGameState {
 
     pile.push(...doubleColorCards);
 
-    // // Add 4 Joker cards
-    // for (let i = 0; i < 4; i++) {
-    //   pile.push({
-    //     type: 'joker',
-    //     color: null,
-    //     value: null
-    //   });
-    // }
+    // Add 4 Joker cards
+    for (let i = 0; i < 4; i++) {
+      pile.push({
+        type: 'joker',
+        color: 'multi',
+        value: 1
+      });
+    }
   };
 
   /**
@@ -425,11 +422,8 @@ export default class GameState implements IGameState {
   };
 
   private nextPlayer = (): void => {
-    console.log('next player');
     const { players } = this.state;
 
-    console.log('players.length)', players.length);
-    console.log('old this.state.currentPlayerIdx', this.state.currentPlayerIdx);
     if (players.length > 0) {
       // make last current player to prev player
       this.state.prevPlayerIdx = this.state.currentPlayerIdx;
@@ -439,21 +433,11 @@ export default class GameState implements IGameState {
       this.state.currentPlayerIdx =
         (this.state.currentPlayerIdx! + this.state.direction) % players.length;
 
-      console.log(
-        'new this.state.currentPlayerIdx',
-        this.state.currentPlayerIdx
-      );
-
       // get player
       const next = players[this.state.currentPlayerIdx % players.length]!;
 
-      console.log('next', next);
-
       // set current player
       this.state.currentPlayer = { id: next?.id, username: next?.username };
-
-      console.log('currentplayer switched');
-      console.log('currentPlayer', this.state.currentPlayer);
     }
   };
 
@@ -526,8 +510,8 @@ export default class GameState implements IGameState {
         const colors = topCardColor.split('-');
 
         for (const color of colors) {
-          const cardsWithSameColor = currPlayer.hand.filter((c: ICard) =>
-            c.color?.includes(color)
+          const cardsWithSameColor = currPlayer.hand.filter(
+            (c: ICard) => c.color?.includes(color) ?? c.color === 'multi'
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
@@ -566,7 +550,19 @@ export default class GameState implements IGameState {
     return true;
   };
 
-  private isConformJokerCard = (_card: ICard): boolean => {
+  private isConformJokerCard = (card: ICard): boolean => {
+    if (card.type !== 'joker') return false;
+
+    // card value is null, undefined or not 1
+    if (!card.value || card.value !== 1) return false;
+
+    // check color
+    // false if null, undefined, or not multi
+    if (!card.color || card.color !== 'multi') return false;
+
+    // check if other values are not set to null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    if (card.select || card.selectValue || card.selectedColor) return false;
     return true;
   };
 
