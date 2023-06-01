@@ -52,7 +52,7 @@ const config = {
   },
   game: {
     turnTimeout: 10000, // 10 sec
-    maxDuration: 1_200_000
+    maxDuration: 1_200_000 // 20 minutes
   }
 } as const;
 
