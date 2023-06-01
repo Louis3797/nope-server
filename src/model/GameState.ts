@@ -518,13 +518,25 @@ export default class GameState implements IGameState {
     const topCard = this.state.topCard;
     if (topCard) {
       const topCardValue = topCard.value!;
+      const topCardColor = topCard.color;
 
       const currPlayer = this.state.players[this.state.currentPlayerIdx!]!;
 
-      const placeableCards = currPlayer.hand.filter((card: ICard) =>
-        sameCardColor(topCard, card)
-      );
-      return placeableCards.length >= topCardValue;
+      if (topCardColor) {
+        const colors = topCardColor.split('-');
+
+        for (const color of colors) {
+          const cardsWithSameColor = currPlayer.hand.filter((c: ICard) =>
+            c.color?.includes(color)
+          );
+
+          if (cardsWithSameColor.length >= topCardValue) {
+            return true;
+          }
+        }
+
+        return false;
+      }
     }
     return false;
   };
