@@ -11,6 +11,9 @@ const sameCardColor = (card1: ICard, card2: ICard): boolean => {
     return false;
   }
 
+  // if card1 or card2 color is multi return true
+  if (card1.color === 'multi' || card2.color === 'multi') return true;
+
   const card1Colors = card1.color.split('-');
   const card2Colors = card2.color.split('-');
 
