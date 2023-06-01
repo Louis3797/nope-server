@@ -97,9 +97,7 @@ export default class GameState implements IGameState {
       return false; // first card is not defined or hand is empty;
     }
 
-    const { value: topCardValue, color: topCardColor } = topCard;
-
-    if (!topCardColor) return false; // top card not defined
+    const { value: topCardValue } = topCard;
 
     const { card1, card2, card3 } = move;
 
@@ -512,8 +510,8 @@ export default class GameState implements IGameState {
         const colors = topCardColor.split('-');
 
         for (const color of colors) {
-          const cardsWithSameColor = currPlayer.hand.filter((c: ICard) =>
-            c.color?.includes(color)
+          const cardsWithSameColor = currPlayer.hand.filter(
+            (c: ICard) => c.color?.includes(color) ?? c.color === 'multi'
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
