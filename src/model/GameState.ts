@@ -570,7 +570,19 @@ export default class GameState implements IGameState {
     return true;
   };
 
-  private isConformRebootCard = (_card: ICard): boolean => {
+  private isConformRebootCard = (card: ICard): boolean => {
+    if (card.type !== 'reboot') return false;
+
+    // card value is not null, undefined
+    if (card.value) return false;
+
+    // check color
+    // false if null, undefined, or not multi
+    if (!card.color || card.color !== 'multi') return false;
+
+    // check if other values are not set to null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    if (card.select || card.selectValue || card.selectedColor) return false;
     return true;
   };
 
