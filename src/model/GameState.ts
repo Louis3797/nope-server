@@ -402,6 +402,15 @@ export default class GameState implements IGameState {
         value: null
       });
     }
+
+    // add 4 see through cards
+    for (const color of ['red', 'green', 'blue', 'yellow']) {
+      pile.push({
+        type: 'see-through',
+        color: color as 'red' | 'green' | 'blue' | 'yellow',
+        value: null
+      });
+    }
   };
 
   /**
@@ -491,7 +500,6 @@ export default class GameState implements IGameState {
     return false;
   };
 
-  // Todo update for action cards later
   /**
    * Check if the player has enough cards on his hand for what the top card requests
    * @returns Returns true if the player has enough cards to place
@@ -509,7 +517,10 @@ export default class GameState implements IGameState {
 
         for (const color of colors) {
           const cardsWithSameColor = currPlayer.hand.filter(
-            (c: ICard) => c.color?.includes(color) ?? c.color === 'multi'
+            (c: ICard) =>
+              // filter only number cards and joker cards
+              (c.type === 'number' || c.type === 'joker') &&
+              (c.color?.includes(color) ?? c.color === 'multi')
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
