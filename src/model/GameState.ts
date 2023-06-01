@@ -373,7 +373,6 @@ export default class GameState implements IGameState {
       { value: 3, count: 3 }
     ];
 
-    // Todo add the other cards
     const doubleColorCards: ICard[] = [
       'red-yellow',
       'blue-green',
@@ -399,14 +398,14 @@ export default class GameState implements IGameState {
 
     pile.push(...doubleColorCards);
 
-    // // Add 4 Joker cards
-    // for (let i = 0; i < 4; i++) {
-    //   pile.push({
-    //     type: 'joker',
-    //     color: null,
-    //     value: null
-    //   });
-    // }
+    // Add 4 Joker cards
+    for (let i = 0; i < 4; i++) {
+      pile.push({
+        type: 'joker',
+        color: 'multi',
+        value: 1
+      });
+    }
   };
 
   /**
