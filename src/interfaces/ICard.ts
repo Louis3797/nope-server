@@ -11,8 +11,7 @@ export default interface ICard {
     | 'red-blue'
     | 'red-green'
     | 'yellow-green'
-    | 'multi'
-    | null; // null for action cards or joker
+    | 'multi';
   value: number | null; // null for action cards or joker
   select?: number | null; // is only not null if the selection card is played
   selectValue?: number | null;
