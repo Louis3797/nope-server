@@ -93,9 +93,15 @@ export default class GameState implements IGameState {
   };
 
   private checkPut = (move: Move): boolean => {
-    const { currentPlayerIdx, players, topCard } = this.state;
+    const { currentPlayerIdx, players, discardPile } = this.state;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const currentPlayerHand = players[currentPlayerIdx!]!.hand;
+
+    // if the topcard is a see-through card and its not the only card in the discard pile than the topcard is the lastTopcard
+    const topCard =
+      this.state.topCard?.type === 'see-through' && discardPile.length > 1
+        ? this.state.lastTopCard
+        : this.state.topCard;
 
     if (!topCard) return false;
 
@@ -113,9 +119,11 @@ export default class GameState implements IGameState {
       // if topcard is not a reboot card we need to check if the player played enough cards.
       // if the topcard is a reboot card the player needs to play only one
       if (topCardType !== 'reboot') {
-        // if card1 is not a reboot card and the topcard value is not 1 than the player played too few cards
-        if (card1.type !== 'reboot' && topCardValue !== 1) {
-          return false; // not enough cards played
+        // if card1 is not a reboot or see-through card and the topcard value is not 1 than the player played too few cards
+        if (card1.type !== 'see-through' && card1.type !== 'reboot') {
+          if (topCardValue !== 1) {
+            return false; // not enough cards played
+          }
         }
       }
 
@@ -311,7 +319,7 @@ export default class GameState implements IGameState {
           discardPile.unshift(card3);
         }
 
-        this.state.topCard = discardPile.shift() ?? null;
+        this.state.topCard = discardPile.at(0) ?? null;
         this.state.lastTopCard = discardPile.at(1) ?? null;
 
         // Next players turn
@@ -399,6 +407,15 @@ export default class GameState implements IGameState {
       pile.push({
         type: 'reboot',
         color: 'multi',
+        value: null
+      });
+    }
+
+    // add 4 see through cards
+    for (const color of ['red', 'green', 'blue', 'yellow']) {
+      pile.push({
+        type: 'see-through',
+        color: color as 'red' | 'green' | 'blue' | 'yellow',
         value: null
       });
     }
@@ -491,13 +508,17 @@ export default class GameState implements IGameState {
     return false;
   };
 
-  // Todo update for action cards later
   /**
    * Check if the player has enough cards on his hand for what the top card requests
    * @returns Returns true if the player has enough cards to place
    */
   private canPlaceCard = (): boolean => {
-    const topCard = this.state.topCard;
+    const topCard =
+      this.state.topCard?.type === 'see-through' &&
+      this.state.discardPile.length > 1
+        ? this.state.lastTopCard
+        : this.state.topCard;
+
     if (topCard) {
       const topCardValue = topCard.value!;
       const topCardColor = topCard.color;
@@ -509,7 +530,10 @@ export default class GameState implements IGameState {
 
         for (const color of colors) {
           const cardsWithSameColor = currPlayer.hand.filter(
-            (c: ICard) => c.color?.includes(color) ?? c.color === 'multi'
+            (c: ICard) =>
+              // filter only number cards and joker cards
+              (c.type === 'number' || c.type === 'joker') &&
+              (c.color?.includes(color) ?? c.color === 'multi')
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
