@@ -223,7 +223,7 @@ export const getAllTournamentStatistics = async (
   req: Request<{ name: string }>,
   res: Response
 ) => {
-  const statistic = await prismaClient.player.findMany({
+  const statistic = await prismaClient.player.findUnique({
     where: { username: req.params.name },
     select: {
       tournamentStatistic: {
@@ -243,13 +243,57 @@ export const getAllTournamentStatistics = async (
   if (!statistic) {
     return res
       .status(httpStatus.NOT_FOUND)
-      .json({ message: 'Tournament not found' });
+      .json({ message: 'Player not found' });
   }
 
   res.status(httpStatus.OK).json(statistic);
 };
 
-// export const getStats = async (
-//     req: Request<{ name: string }>,
-//     res: Response
-//   ) => {};
+export const getStats = async (
+  req: Request<{ name: string }>,
+  res: Response
+) => {
+  const stats = await prismaClient.player.findUnique({
+    where: { username: req.params.name },
+    select: {
+      tournamentStatistic: {
+        select: {
+          matchesPlayed: true,
+          wonMatches: true,
+          lostMatches: true,
+          gamesPlayed: true,
+          wonGames: true,
+          lostGames: true
+        }
+      }
+    }
+  });
+
+  if (!stats) {
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: 'Player not found' });
+  }
+
+  const resultStats = {
+    stats: {
+      matchesPlayed: 0,
+      wonMatches: 0,
+      lostMatches: 0,
+      gamesPlayed: 0,
+      wonGames: 0,
+      lostGames: 0
+    }
+  };
+
+  for (const stat of stats.tournamentStatistic) {
+    resultStats.stats.matchesPlayed += stat.matchesPlayed;
+    resultStats.stats.wonMatches += stat.wonMatches;
+    resultStats.stats.lostMatches += stat.lostMatches;
+    resultStats.stats.gamesPlayed += stat.gamesPlayed;
+    resultStats.stats.wonGames += stat.wonGames;
+    resultStats.stats.lostGames += stat.lostGames;
+  }
+
+  res.status(httpStatus.OK).json(resultStats);
+};

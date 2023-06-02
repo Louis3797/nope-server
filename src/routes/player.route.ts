@@ -12,7 +12,7 @@ playerRouter.get(
   playerController.getPlayerInfo
 );
 
-// playerRouter.get('/:name/stats/', playerController.getStats);
+playerRouter.get('/:name/stats/', playerController.getStats);
 
 playerRouter.get(
   '/:name/tournaments',
