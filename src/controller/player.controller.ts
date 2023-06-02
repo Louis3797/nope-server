@@ -219,10 +219,35 @@ export const getHostedTournaments = async (
 //   res: Response
 // ) => {};
 
-// export const getAllTournamentStatistics = async (
-//   req: Request<{ name: string }>,
-//   res: Response
-// ) => {};
+export const getAllTournamentStatistics = async (
+  req: Request<{ name: string }>,
+  res: Response
+) => {
+  const statistic = await prismaClient.player.findMany({
+    where: { username: req.params.name },
+    select: {
+      tournamentStatistic: {
+        select: {
+          tournamentId: true,
+          matchesPlayed: true,
+          wonMatches: true,
+          lostMatches: true,
+          gamesPlayed: true,
+          wonGames: true,
+          lostGames: true
+        }
+      }
+    }
+  });
+
+  if (!statistic) {
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: 'Tournament not found' });
+  }
+
+  res.status(httpStatus.OK).json(statistic);
+};
 
 // export const getStats = async (
 //     req: Request<{ name: string }>,

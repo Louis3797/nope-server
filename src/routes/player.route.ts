@@ -26,10 +26,10 @@ playerRouter.get(
   playerController.getHostedTournaments
 );
 
-// playerRouter.get(
-//   '/:name/tournaments/statistics/',
-//   playerController.getAllTournamentStatistics
-// );
+playerRouter.get(
+  '/:name/tournaments/statistics',
+  playerController.getAllTournamentStatistics
+);
 
 // playerRouter.get('/:name/matches', playerController.getParticipatedMatches);
 
