@@ -45,7 +45,6 @@ model Player {
   hostedTournaments      Tournament[]          @relation(name: "Tournament_To_Host")
 }
 
-// Todo add winner
 model Game {
   id          String     @id @default(cuid())
   gameMode    GameMode   @default(NORMAL)
