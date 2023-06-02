@@ -31,7 +31,7 @@ playerRouter.get(
   playerController.getAllTournamentStatistics
 );
 
-// playerRouter.get('/:name/matches', playerController.getParticipatedMatches);
+playerRouter.get('/:name/matches', playerController.getParticipatedMatches);
 
 // playerRouter.get('/:name/matches/won/', playerController.getWonMatches);
 
