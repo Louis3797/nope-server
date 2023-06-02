@@ -33,10 +33,10 @@ playerRouter.get(
 
 playerRouter.get('/:name/matches', playerController.getParticipatedMatches);
 
-playerRouter.get('/:name/matches/won/', playerController.getWonMatches);
+playerRouter.get('/:name/matches/won', playerController.getWonMatches);
 
 playerRouter.get('/:name/games', playerController.getParticipatedGames);
 
-// playerRouter.get('/:name/games/won/', playerController.getWonGames);
+playerRouter.get('/:name/games/won', playerController.getWonGames);
 
 export default playerRouter;
