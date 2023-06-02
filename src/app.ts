@@ -9,7 +9,14 @@ import config from './config/config';
 import { xssMiddleware } from './middleware/xssMiddleware';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { authRouter, tokenRouter } from './routes';
+import {
+  authRouter,
+  gameRouter,
+  matchRouter,
+  playerRouter,
+  tokenRouter,
+  tournamentRouter
+} from './routes';
 import authLimiter from './middleware/authLimiter';
 import isAuthSocket from './middleware/socket/isAuthSocket';
 import logger from './middleware/logger';
@@ -84,6 +91,14 @@ app.use(
   })
 );
 app.use('/api/auth', authLimiter, authRouter);
+
+app.use('/api/player', playerRouter);
+
+app.use('/api/tournament', tournamentRouter);
+
+app.use('/api/match', matchRouter);
+
+app.use('/api/game', gameRouter);
 
 app.use('/api', tokenRouter);
 
@@ -427,7 +442,10 @@ io.on('connection', async (socket) => {
       const tournamentData = await prismaClient.tournament.update({
         where: { id: tournamentId },
         data: {
-          players: { disconnect: { id: user.id } },
+          players:
+            tournamentInfo.status === 'WAITING_FOR_MORE_PLAYERS'
+              ? { disconnect: { id: user.id } }
+              : {}, // if tournament ended than dont disconnect
           currentSize: { decrement: 1 }
         },
         select: { id: true, currentSize: true, bestOf: true, players: true }
