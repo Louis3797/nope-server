@@ -89,10 +89,60 @@ export const getParticipatedTournaments = async (
   res.status(httpStatus.OK).json(playerTournaments);
 };
 
-// export const getWonTournaments = async (
-//   req: Request<{ name: string }>,
-//   res: Response
-// ) => {};
+export const getWonTournaments = async (
+  req: Request<{ name: string }>,
+  res: Response
+) => {
+  const wonTournaments = await prismaClient.player.findUnique({
+    where: {
+      username: req.params.name
+    },
+    select: {
+      wonTournaments: {
+        select: {
+          id: true,
+          createdAt: true,
+          endedAt: true,
+          startedAt: true,
+          status: true,
+          bestOf: true,
+          host: {
+            select: {
+              id: true,
+              username: true,
+              firstname: true,
+              lastname: true
+            }
+          },
+          winner: {
+            select: {
+              id: true,
+              username: true,
+              firstname: true,
+              lastname: true
+            }
+          },
+          players: {
+            select: {
+              id: true,
+              username: true,
+              firstname: true,
+              lastname: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!wonTournaments) {
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: 'Player not found' });
+  }
+
+  res.status(httpStatus.OK).json(wonTournaments);
+};
 
 // export const getHostedTournaments = async (
 //   req: Request<{ name: string }>,
