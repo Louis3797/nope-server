@@ -291,10 +291,52 @@ export const getWonMatches = async (
   res.status(httpStatus.OK).json(wonMatches);
 };
 
-// export const getParticipatedGames = async (
-//   req: Request<{ name: string }>,
-//   res: Response
-// ) => {};
+export const getParticipatedGames = async (
+  req: Request<{ name: string }>,
+  res: Response
+) => {
+  const games = await prismaClient.player.findUnique({
+    where: {
+      username: req.params.name
+    },
+    select: {
+      playedGames: {
+        select: {
+          id: true,
+          gameMode: true,
+          createdAt: true,
+          endedAt: true,
+          status: true,
+          roomSize: true,
+          private: true,
+          players: {
+            select: {
+              id: true,
+              username: true,
+              firstname: true,
+              lastname: true
+            }
+          },
+          matchId: true,
+          winner: {
+            select: {
+              id: true,
+              username: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!games) {
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: 'Player not found' });
+  }
+
+  res.status(httpStatus.OK).json(games);
+};
 
 // export const getWonGames = async (
 //   req: Request<{ name: string }>,
