@@ -19,12 +19,12 @@ playerRouter.get(
   playerController.getParticipatedTournaments
 );
 
-playerRouter.get('/:name/tournaments/won/', playerController.getWonTournaments);
+playerRouter.get('/:name/tournaments/won', playerController.getWonTournaments);
 
-// playerRouter.get(
-//   '/:name/tournaments/hosted/',
-//   playerController.getHostedTournaments
-// );
+playerRouter.get(
+  '/:name/tournaments/hosted',
+  playerController.getHostedTournaments
+);
 
 // playerRouter.get(
 //   '/:name/tournaments/statistics/',
