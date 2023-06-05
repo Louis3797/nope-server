@@ -41,6 +41,8 @@ import { PriorityQueue } from './utils';
 import { matchmaking } from './socket/matchmaking';
 import type { Player } from '@prisma/client';
 import { getTournamentInfo } from './service/tournament.service';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 
 export const matchMakingQueues = new Map<
   string,
@@ -90,6 +92,9 @@ app.use(
     credentials: true
   })
 );
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use('/api/auth', authLimiter, authRouter);
 
 app.use('/api/player', playerRouter);
