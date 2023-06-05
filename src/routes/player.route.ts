@@ -59,13 +59,13 @@ import { playerInfoSchema } from '../validations/player.validation';
  *         bestOf:
  *           type: integer
  *         host:
- *           $ref: '#/components/schemas/Player'
+ *           $ref: '#/components/schemas/BasicPlayer'
  *         winner:
- *           $ref: '#/components/schemas/Player'
+ *           $ref: '#/components/schemas/BasicPlayer'
  *         players:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Player'
+ *             $ref: '#/components/schemas/BasicPlayer'
  *       required:
  *         - id
  *         - createdAt
@@ -90,11 +90,11 @@ import { playerInfoSchema } from '../validations/player.validation';
  *         status:
  *           type: string
  *         winner:
- *           $ref: '#/components/schemas/Player'
+ *           $ref: '#/components/schemas/BasicPlayer'
  *         opponents:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Player'
+ *             $ref: '#/components/schemas/BasicPlayer'
  *       required:
  *         - id
  *         - createdAt
@@ -123,7 +123,7 @@ import { playerInfoSchema } from '../validations/player.validation';
  *         players:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Player'
+ *             $ref: '#/components/schemas/BasicPlayer'
  *         matchId:
  *           type: string
  *         winner:

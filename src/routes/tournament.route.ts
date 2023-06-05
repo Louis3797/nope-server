@@ -11,7 +11,7 @@ import { tournamentInfoSchema } from '../validations/tournament.validation';
  *       type: object
  *       properties:
  *         player:
- *             $ref: '#/components/schemas/Player'
+ *             $ref: '#/components/schemas/BasicPlayer'
  *         tournamentId:
  *           type: string
  *         matchesPlayed:
