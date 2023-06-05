@@ -16,7 +16,10 @@ const options: swaggerJsdoc.Options = {
       }
     },
     schemes: ['http', 'https'],
-    servers: [{ url: 'nope-server.azurewebsites.net' }]
+    servers: [
+      { url: 'https://nope-server.azurewebsites.net' },
+      { url: 'http://localhost:4040' }
+    ]
   },
   apis: [path.resolve(__dirname, '../../src/routes/*.route.ts')],
   components: {

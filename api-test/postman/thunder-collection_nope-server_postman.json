@@ -1,0 +1,497 @@
+{
+    "info": {
+        "name": "nope-server",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": ""
+    },
+    "item": [
+        {
+            "name": "auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "http://localhost:4040/api/auth/register",
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"test1234567\",\n  \"password\": \"123456\",\n  \"firstname\": \"test1234567\",\n  \"lastname\": \"test1234567\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "http://localhost:4040/api/auth/login",
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"test1234567\",\n  \"password\": \"123456\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "verify token",
+            "item": [
+                {
+                    "name": "Verify Token",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "http://localhost:4040/api/verify-token",
+                            "path": [
+                                "api",
+                                "verify-token"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJ1c2VySWQiOiJjbGd1eWR1ZXgwMDAwNjRmc25seG11ZXJvIiwiaWF0IjoxNjg1OTkyMDEwLCJleHAiOjE2ODYwNzg0MTB9.ma_xn0_d_h7Wecz6VaJK4xCzHWf5tsvg0KyKulIR_Fs\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "player",
+            "item": [
+                {
+                    "name": "/api/player/{name}",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test",
+                            "path": [
+                                "api",
+                                "player",
+                                "test"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "Player not found",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/23456jytmnberhj7u6y5t4rwfrgbfn ty645wefVBFGNRT54GWESD",
+                            "path": [
+                                "api",
+                                "player",
+                                "23456jytmnberhj7u6y5t4rwfrgbfn ty645wefVBFGNRT54GWESD"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/stats",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/stats",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "stats"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/tournaments/won",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/tournaments/won",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "tournaments",
+                                "won"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/tournaments",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/tournaments",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "tournaments"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/matches",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/matches",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "matches"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/games",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/games",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "games"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/games/won",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/games/won",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "games",
+                                "won"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/matches/won",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/matches/won",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "matches",
+                                "won"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/tournaments/hosted",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/tournaments/hosted",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "tournaments",
+                                "hosted"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/player/{name}/tournaments/statistics",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/player/test/tournaments/statistics",
+                            "path": [
+                                "api",
+                                "player",
+                                "test",
+                                "tournaments",
+                                "statistics"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "tournament",
+            "item": [
+                {
+                    "name": "/api/tournament/{id}",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/tournament/clic10j4c000c649nln0zzezr",
+                            "path": [
+                                "api",
+                                "tournament",
+                                "clic10j4c000c649nln0zzezr"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "/api/tournament/{id}/statistic",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/tournament/clic10j4c000c649nln0zzezr/statistic",
+                            "path": [
+                                "api",
+                                "tournament",
+                                "clic10j4c000c649nln0zzezr",
+                                "statistic"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "Tournament not found",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/tournament/1",
+                            "path": [
+                                "api",
+                                "tournament",
+                                "1"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "game",
+            "item": [
+                {
+                    "name": "/api/game/{id}",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/game/clic10nuk000k649n83427s9h",
+                            "path": [
+                                "api",
+                                "game",
+                                "clic10nuk000k649n83427s9h"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "Game not found",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/game/1",
+                            "path": [
+                                "api",
+                                "game",
+                                "1"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "match",
+            "item": [
+                {
+                    "name": "/api/match/{id}",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/match/clic10nuc000i649n6ot8s9fo",
+                            "path": [
+                                "api",
+                                "match",
+                                "clic10nuc000i649n6ot8s9fo"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                },
+                {
+                    "name": "Match not found",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:4040/api/match/1",
+                            "path": [
+                                "api",
+                                "match",
+                                "1"
+                            ],
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "4040"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
