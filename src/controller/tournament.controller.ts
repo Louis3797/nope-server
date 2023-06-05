@@ -77,24 +77,28 @@ export const getTournamentStatistic = async (
   req: Request<{ id: string }>,
   res: Response
 ) => {
-  const statistic = await prismaClient.tournamentStatistic.findMany({
-    where: { tournamentId: req.params.id },
+  const statistic = await prismaClient.tournament.findUnique({
+    where: { id: req.params.id },
     select: {
-      player: {
+      tournamentStatistic: {
         select: {
-          id: true,
-          username: true,
-          firstname: true,
-          lastname: true
+          tournamentId: true,
+          matchesPlayed: true,
+          wonMatches: true,
+          lostMatches: true,
+          gamesPlayed: true,
+          wonGames: true,
+          lostGames: true,
+          player: {
+            select: {
+              id: true,
+              username: true,
+              firstname: true,
+              lastname: true
+            }
+          }
         }
-      },
-      tournamentId: true,
-      matchesPlayed: true,
-      wonMatches: true,
-      lostMatches: true,
-      gamesPlayed: true,
-      wonGames: true,
-      lostGames: true
+      }
     }
   });
 
