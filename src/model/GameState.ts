@@ -36,6 +36,13 @@ export default class GameState implements IGameState {
     this.generateDeck();
     this.state.drawPile = shuffle(this.state.drawPile);
 
+    if (this.state.drawPile[0]?.type !== 'number') {
+      // shuffle until number card is top card
+      while (this.state.drawPile[0]?.type !== 'number') {
+        this.state.drawPile = shuffle(this.state.drawPile);
+      }
+    }
+
     // Give cards to player
     this.dispenseCards();
 
@@ -86,10 +93,15 @@ export default class GameState implements IGameState {
   };
 
   private checkPut = (move: Move): boolean => {
-    console.log(this.state.currentPlayer);
-    const { currentPlayerIdx, players, topCard } = this.state;
+    const { currentPlayerIdx, players, discardPile } = this.state;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const currentPlayerHand = players[currentPlayerIdx!]!.hand;
+
+    // if the topcard is a see-through card and its not the only card in the discard pile than the topcard is the lastTopcard
+    const topCard =
+      this.state.topCard?.type === 'see-through' && discardPile.length > 1
+        ? this.state.lastTopCard
+        : this.state.topCard;
 
     if (!topCard) return false;
 
@@ -97,17 +109,27 @@ export default class GameState implements IGameState {
       return false; // first card is not defined or hand is empty;
     }
 
-    const { value: topCardValue, color: topCardColor } = topCard;
-
-    if (!topCardColor) return false; // top card not defined
+    const { value: topCardValue, type: topCardType } = topCard;
 
     const { card1, card2, card3 } = move;
 
     if (card1 && !card2 && !card3) {
       if (!this.isConformCard(card1)) return false; // not a conform card
 
-      if (topCardValue !== 1 || !sameCardColor(topCard, card1)) {
-        return false; // not enough cards or not the right color
+      // if topcard is not a reboot card we need to check if the player played enough cards.
+      // if the topcard is a reboot card the player needs to play only one
+      if (topCardType !== 'reboot') {
+        // if card1 is not a reboot or see-through card and the topcard value is not 1 than the player played too few cards
+        if (card1.type !== 'see-through' && card1.type !== 'reboot') {
+          if (topCardValue !== 1) {
+            return false; // not enough cards played
+          }
+        }
+      }
+
+      // if card1 has not the same color than the topcard than the played card is not conform
+      if (!sameCardColor(topCard, card1)) {
+        return false; // not the right color
       }
 
       const card1InHand = isCardInHand(card1, currentPlayerHand);
@@ -117,6 +139,8 @@ export default class GameState implements IGameState {
       if (!this.isConformCard(card1) || !this.isConformCard(card2)) {
         return false; // not a conform card
       }
+
+      if (topCardType === 'reboot') return false;
       if (
         topCardValue !== 2 ||
         !sameCardColor(topCard, card1) ||
@@ -129,9 +153,6 @@ export default class GameState implements IGameState {
       return card1InHand && card2InHand; // true if player has specified cards in hand
     }
     if (card1 && card2 && card3) {
-      console.log('this.isConformCard(card1)', this.isConformCard(card1));
-      console.log('this.isConformCard(card2)', this.isConformCard(card2));
-      console.log('this.isConformCard(card3)', this.isConformCard(card2));
       if (
         !this.isConformCard(card1) ||
         !this.isConformCard(card2) ||
@@ -140,19 +161,8 @@ export default class GameState implements IGameState {
         return false; // not a conform card
       }
 
-      console.log('topcard value', topCardValue);
-      console.log(
-        'sameCardColor(topCard, card1)',
-        sameCardColor(topCard, card1)
-      );
-      console.log(
-        'sameCardColor(topCard, card2)',
-        sameCardColor(topCard, card2)
-      );
-      console.log(
-        'sameCardColor(topCard, card3)',
-        sameCardColor(topCard, card3)
-      );
+      if (topCardType === 'reboot') return false;
+
       if (
         topCardValue !== 3 ||
         !sameCardColor(topCard, card1) ||
@@ -162,18 +172,6 @@ export default class GameState implements IGameState {
         return false; // false amount of placed cards or false color
       }
 
-      console.log(
-        'isCardInHand(card1, currentPlayerHand)',
-        isCardInHand(card1, currentPlayerHand)
-      );
-      console.log(
-        'isCardInHand(card2 currentPlayerHand)',
-        isCardInHand(card2, currentPlayerHand)
-      );
-      console.log(
-        'isCardInHand(card3, currentPlayerHand)',
-        isCardInHand(card3, currentPlayerHand)
-      );
       const card1InHand = isCardInHand(card1, currentPlayerHand);
       const card2InHand = isCardInHand(card2, currentPlayerHand);
       const card3InHand = isCardInHand(card3, currentPlayerHand);
@@ -321,15 +319,12 @@ export default class GameState implements IGameState {
           discardPile.unshift(card3);
         }
 
-        this.state.topCard = discardPile.shift() ?? null;
+        this.state.topCard = discardPile.at(0) ?? null;
         this.state.lastTopCard = discardPile.at(1) ?? null;
 
         // Next players turn
-
-        console.log('call next player');
         this.nextPlayer();
 
-        console.log('next one', this.state.currentPlayer);
         // update last move
         this.state.lastMove = move;
         return this.state;
@@ -373,7 +368,6 @@ export default class GameState implements IGameState {
       { value: 3, count: 3 }
     ];
 
-    // Todo add the other cards
     const doubleColorCards: ICard[] = [
       'red-yellow',
       'blue-green',
@@ -399,14 +393,32 @@ export default class GameState implements IGameState {
 
     pile.push(...doubleColorCards);
 
-    // // Add 4 Joker cards
-    // for (let i = 0; i < 4; i++) {
-    //   pile.push({
-    //     type: 'joker',
-    //     color: null,
-    //     value: null
-    //   });
-    // }
+    // Add 4 Joker cards
+    for (let i = 0; i < 4; i++) {
+      pile.push({
+        type: 'joker',
+        color: 'multi',
+        value: 1
+      });
+    }
+
+    // add 4 reboot cards
+    for (let i = 0; i < 4; i++) {
+      pile.push({
+        type: 'reboot',
+        color: 'multi',
+        value: null
+      });
+    }
+
+    // add 4 see through cards
+    for (const color of ['red', 'green', 'blue', 'yellow']) {
+      pile.push({
+        type: 'see-through',
+        color: color as 'red' | 'green' | 'blue' | 'yellow',
+        value: null
+      });
+    }
   };
 
   /**
@@ -425,11 +437,8 @@ export default class GameState implements IGameState {
   };
 
   private nextPlayer = (): void => {
-    console.log('next player');
     const { players } = this.state;
 
-    console.log('players.length)', players.length);
-    console.log('old this.state.currentPlayerIdx', this.state.currentPlayerIdx);
     if (players.length > 0) {
       // make last current player to prev player
       this.state.prevPlayerIdx = this.state.currentPlayerIdx;
@@ -439,21 +448,11 @@ export default class GameState implements IGameState {
       this.state.currentPlayerIdx =
         (this.state.currentPlayerIdx! + this.state.direction) % players.length;
 
-      console.log(
-        'new this.state.currentPlayerIdx',
-        this.state.currentPlayerIdx
-      );
-
       // get player
       const next = players[this.state.currentPlayerIdx % players.length]!;
 
-      console.log('next', next);
-
       // set current player
       this.state.currentPlayer = { id: next?.id, username: next?.username };
-
-      console.log('currentplayer switched');
-      console.log('currentPlayer', this.state.currentPlayer);
     }
   };
 
@@ -509,13 +508,17 @@ export default class GameState implements IGameState {
     return false;
   };
 
-  // Todo update for action cards later
   /**
    * Check if the player has enough cards on his hand for what the top card requests
    * @returns Returns true if the player has enough cards to place
    */
   private canPlaceCard = (): boolean => {
-    const topCard = this.state.topCard;
+    const topCard =
+      this.state.topCard?.type === 'see-through' &&
+      this.state.discardPile.length > 1
+        ? this.state.lastTopCard
+        : this.state.topCard;
+
     if (topCard) {
       const topCardValue = topCard.value!;
       const topCardColor = topCard.color;
@@ -526,8 +529,11 @@ export default class GameState implements IGameState {
         const colors = topCardColor.split('-');
 
         for (const color of colors) {
-          const cardsWithSameColor = currPlayer.hand.filter((c: ICard) =>
-            c.color?.includes(color)
+          const cardsWithSameColor = currPlayer.hand.filter(
+            (c: ICard) =>
+              // filter only number cards and joker cards
+              (c.type === 'number' || c.type === 'joker') &&
+              (c.color?.includes(color) ?? c.color === 'multi')
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
@@ -566,7 +572,19 @@ export default class GameState implements IGameState {
     return true;
   };
 
-  private isConformJokerCard = (_card: ICard): boolean => {
+  private isConformJokerCard = (card: ICard): boolean => {
+    if (card.type !== 'joker') return false;
+
+    // card value is null, undefined or not 1
+    if (!card.value || card.value !== 1) return false;
+
+    // check color
+    // false if null, undefined, or not multi
+    if (!card.color || card.color !== 'multi') return false;
+
+    // check if other values are not set to null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    if (card.select || card.selectValue || card.selectedColor) return false;
     return true;
   };
 
@@ -574,7 +592,19 @@ export default class GameState implements IGameState {
     return true;
   };
 
-  private isConformRebootCard = (_card: ICard): boolean => {
+  private isConformRebootCard = (card: ICard): boolean => {
+    if (card.type !== 'reboot') return false;
+
+    // card value is not null, undefined
+    if (card.value) return false;
+
+    // check color
+    // false if null, undefined, or not multi
+    if (!card.color || card.color !== 'multi') return false;
+
+    // check if other values are not set to null
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    if (card.select || card.selectValue || card.selectedColor) return false;
     return true;
   };
 
