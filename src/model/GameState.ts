@@ -38,13 +38,10 @@ export default class GameState implements IGameState {
 
     if (this.state.drawPile[0]?.type !== 'number') {
       // shuffle until number card is top card
-      while (this.state.drawPile[0]?.type !== 'number') {
+      do {
         this.state.drawPile = shuffle(this.state.drawPile);
-      }
+      } while (this.state.drawPile[0]?.type !== 'number');
     }
-
-    // Give cards to player
-    this.dispenseCards();
 
     // set top card
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -52,6 +49,9 @@ export default class GameState implements IGameState {
 
     // also put top card on discardPile
     this.state.discardPile.unshift(this.state.topCard);
+
+    // Give cards to player
+    this.dispenseCards();
 
     this.state.currentPlayerIdx = 0;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -532,8 +532,8 @@ export default class GameState implements IGameState {
           const cardsWithSameColor = currPlayer.hand.filter(
             (c: ICard) =>
               // filter only number cards and joker cards
-              (c.type === 'number' || c.type === 'joker') &&
-              (c.color?.includes(color) ?? c.color === 'multi')
+              (c.type === 'number' && c.color?.includes(color)) ||
+              (c.type === 'joker' && c.color === 'multi')
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
