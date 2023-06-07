@@ -17,11 +17,17 @@ const options: swaggerJsdoc.Options = {
     },
     schemes: ['http', 'https'],
     servers: [
-      { url: 'https://nope-server.azurewebsites.net' },
-      { url: 'http://localhost:4040' }
+      {
+        url: 'https://nope-server.azurewebsites.net',
+        description: 'Production server'
+      },
+      { url: 'http://localhost:4040', description: 'For development only' }
     ]
   },
-  apis: [path.resolve(__dirname, '../../src/routes/*.route.ts')],
+  apis: [
+    path.resolve(__dirname, '../../src/routes/*.route.ts'),
+    path.resolve(__dirname, '../../dist/routes/*.route.js')
+  ],
   components: {
     securitySchemas: {
       bearerAuth: {
