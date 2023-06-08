@@ -116,9 +116,9 @@ export default class GameState implements IGameState {
     if (card1 && !card2 && !card3) {
       if (!this.isConformCard(card1)) return false; // not a conform card
 
-      // if topcard is not a reboot card we need to check if the player played enough cards.
+      // if topcard is not a reboot or see-through card we need to check if the player played enough cards.
       // if the topcard is a reboot card the player needs to play only one
-      if (topCardType !== 'reboot') {
+      if (topCardType !== 'reboot' && topCardType !== 'see-through') {
         // if card1 is not a reboot or see-through card and the topcard value is not 1 than the player played too few cards
         if (card1.type !== 'see-through' && card1.type !== 'reboot') {
           if (topCardValue !== 1) {
@@ -541,7 +541,17 @@ export default class GameState implements IGameState {
           }
         }
 
-        return false;
+        // if player has no number or joker card but a action
+        // card in the same color as the top card,
+        // then he needs to put the actioncard down
+        const matchingActionCard = currPlayer.hand.filter(
+          (c: ICard) =>
+            // filter only number cards and joker cards
+            (c.type === 'see-through' && sameCardColor(topCard, c)) ||
+            (c.type === 'reboot' && c.color === 'multi')
+        );
+
+        return matchingActionCard.length >= 1;
       }
     }
     return false;
