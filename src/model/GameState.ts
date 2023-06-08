@@ -528,12 +528,19 @@ export default class GameState implements IGameState {
       if (topCardColor) {
         const colors = topCardColor.split('-');
 
+        let validCardAmount = 0;
+
         for (const color of colors) {
           const cardsWithSameColor = currPlayer.hand.filter(
             (c: ICard) =>
               // filter only number cards and joker cards
               (c.type === 'number' && c.color?.includes(color)) ||
               (c.type === 'joker' && c.color === 'multi')
+          );
+
+          validCardAmount = Math.max(
+            validCardAmount,
+            cardsWithSameColor.length
           );
 
           if (cardsWithSameColor.length >= topCardValue) {
@@ -544,14 +551,17 @@ export default class GameState implements IGameState {
         // if player has no number or joker card but a action
         // card in the same color as the top card,
         // then he needs to put the actioncard down
-        const matchingActionCard = currPlayer.hand.filter(
-          (c: ICard) =>
-            // filter only number cards and joker cards
-            (c.type === 'see-through' && sameCardColor(topCard, c)) ||
-            (c.type === 'reboot' && c.color === 'multi')
-        );
 
-        return matchingActionCard.length >= 1;
+        if (validCardAmount === 0) {
+          const matchingActionCard = currPlayer.hand.filter(
+            (c: ICard) =>
+              // filter only number cards and joker cards
+              (c.type === 'see-through' && sameCardColor(topCard, c)) ||
+              (c.type === 'reboot' && c.color === 'multi')
+          );
+
+          return matchingActionCard.length >= 1;
+        }
       }
     }
     return false;
