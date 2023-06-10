@@ -520,7 +520,7 @@ export default class GameState implements IGameState {
         : this.state.topCard;
 
     if (topCard) {
-      const topCardValue = topCard.value!;
+      const topCardValue = topCard.value;
       const topCardColor = topCard.color;
 
       const currPlayer = this.state.players[this.state.currentPlayerIdx!]!;
@@ -543,8 +543,15 @@ export default class GameState implements IGameState {
             cardsWithSameColor.length
           );
 
-          if (cardsWithSameColor.length >= topCardValue) {
-            return true;
+          // if topcard is reboot or see through than topcard value is null
+          if (topCard.type === 'reboot' || topCard.type === 'see-through') {
+            if (cardsWithSameColor.length >= 1) {
+              return true;
+            }
+          } else {
+            if (topCardValue && cardsWithSameColor.length >= topCardValue) {
+              return true;
+            }
           }
         }
 
