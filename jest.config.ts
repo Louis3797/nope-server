@@ -17,7 +17,8 @@ module.exports = {
     'index.ts',
     'app.ts',
     'src/validations', // no need for testing validations
-    'src/routes'
+    'src/routes',
+    'src/config/swagger.ts'
   ],
   transform: {
     '^.+\\.m?[tj]sx?$': [
