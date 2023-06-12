@@ -16,7 +16,9 @@
 </p>
 
 <h5>
-    <a href="https://github.com/Louis3797/nope-server#readme">Dokumentation</a>
+    <a href="https://nope-server.azurewebsites.net/docs/">Swagger Dokumentation</a>
+  <span> · </span>
+   <a href="https://github.com/Louis3797/nope-server/blob/main/Endpoints.md">Socket.io Event Dokumentation</a>
   <span> · </span>
     <a href="https://github.com/Louis3797/nope-server/issues/">Bug melden</a>
   <span> · </span>
@@ -31,10 +33,15 @@
 - [Inhaltsübersicht](#inhaltsübersicht)
   - [Über das Projekt](#über-das-projekt)
     - [Tech Stack](#tech-stack)
+    - [Architektur](#architektur)
     - [Endpoints](#endpoints)
-    - [Server in Client integrieren](#server-in-client-integrieren)
     - [Projektstruktur](#projektstruktur)
     - [Datenbank](#datenbank)
+    - [Diagramme](#diagramme)
+      - [Login und Register Sequenzdiagramm](#login-und-register-sequenzdiagramm)
+      - [Create Tournament Sequenzdiagramm](#create-tournament-sequenzdiagramm)
+      - [Join Tournament Sequenzdiagramm](#join-tournament-sequenzdiagramm)
+      - [Matchmaking Ablaufdiagramm](#matchmaking-ablaufdiagramm)
     - [Umgebungsvariablen](#umgebungsvariablen)
   - [Erste Schritte](#erste-schritte)
     - [Voraussetzungen](#voraussetzungen)
@@ -48,7 +55,9 @@
 
 ## Über das Projekt
 
-Der Nope Multiplayer Game Server wird für die Abwicklung von Online-Spielen für das Nope-Kartenspiel verwendet. Er bietet sowohl eine REST-API als auch eine WebSocket-Verbindung und ermöglicht es Spielern, in Echtzeit gegeneinander anzutreten. Der Server wurde mit Express.js, Socket.io und TypeScript entwickelt und unterstützt zwei verschiedene Spielmodi: Standardspiel für 2-6 Spieler und Turniermodus.
+Der Nope Multiplayer Game Server wird für die Abwicklung von Online-Spielen für das Nope-Kartenspiel verwendet. Er bietet sowohl eine REST-API als auch eine WebSocket-Verbindung und ermöglicht es Spielern, in Echtzeit gegeneinander anzutreten. Der Server wurde mit Express.js, Socket.io und TypeScript entwickelt.
+
+Der Server kann unter dieser URL angesprochen werden `https://nope-server.azurewebsites.net`
 
 <!-- TechStack -->
 
@@ -58,15 +67,21 @@ Der Nope Multiplayer Game Server wird für die Abwicklung von Online-Spielen fü
 
 ---
 
+### Architektur
+
+![Architectur](/assets/architecture.png)
+
 <!-- Endpoints -->
 
 ### Endpoints
 
-See [Endpoints.md](https://github.com/Louis3797/nope-server/blob/main/Endpoints.md)
+Der Server bietet eine umfassende API auf die per Websockets (per Socket.io) oder REST API zugegriffen werden kann.
 
-<!-- Integrate server into client -->
+Um einen guten Einblick in die API des Servers zugeben gibt es zum einen die [Endpoints.md](https://github.com/Louis3797/nope-server/blob/main/Endpoints.md), in der die Socket.io Events zu finden sind, die die Clients anzusprechen. Zudem ist die REST API des Servers mit Swagger dokumentiert [Swagger Dokumentation](https://nope-server.azurewebsites.net/docs/)
 
-### Server in Client integrieren
+Der Server stellt eine umfassende API zur Verfügung, auf die über Websockets (mit Socket.io) oder die REST API zugegriffen werden kann.
+
+Um einen umfassenden Überblick über die API des Servers zu erhalten, stehen zwei Ressourcen zur Verfügung. Die Datei [Endpoints.md](https://github.com/Louis3797/nope-server/blob/main/Endpoints.md) enthält eine Liste der Socket.io-Ereignisse, die von den Clients verwendet werden können. Zusätzlich ist die REST API des Servers mit Swagger dokumentiert und kann unter [Swagger Dokumentation](https://nope-server.azurewebsites.net/docs/) eingesehen werden.
 
 <!-- Project Structure -->
 
@@ -74,27 +89,29 @@ See [Endpoints.md](https://github.com/Louis3797/nope-server/blob/main/Endpoints.
 
 ```txt
 .
-├── assets          # Assets für die Dokumentation
+├── api-test            REST API Tests
+│   ├── postman         Postman Tests
+│   └── thunder-client  Thunder Client Tests
+├── assets              Assets (Bilder, Diagramme, etc.)
 ├── prisma
-│   └── migrations  # Prisma Migrations
+│   └── migrations      Prisma Migrationen
 ├── src
-│   ├── config      # Config Dateien
-│   ├── controller  # Controllers
-│   ├── error       # Custom Error Klassen
-│   ├── interfaces  # Typescript Interfaces
-│   ├── middleware  # Custom Middleware
-│   ├── model       # Models
-│   ├── routes      # Routes
-│   ├── service     # Services
-│   ├── socket      # Websocket spezifischer Code
-│   ├── types       # Typescript Types
-│   ├── utils       # Utility Klassen und Funktionen
-│   └── validations # Validation Schemas
-│   └── app.ts      # Express App
-│   └── index.ts    # Server Entrypoint
-└── test
-    ├── integration # Integration Tests
-    └── unit        # Unit Tests
+│   ├── config          Config Dateien
+│   ├── controller      Controller
+│   ├── error           Custom Error Klassen
+│   ├── interfaces      Typescript Interfaces
+│   ├── middleware      Middlewares
+│   │   └── socket      Socket.io Middlewares
+│   ├── model           Modele
+│   ├── routes          Routen/Endpoints
+│   ├── service         Services
+│   ├── socket          Socket.io Sezifische Controller
+│   ├── types           Typescript Types
+│   ├── utils           Utility Klassen und Funktionen
+│   └── validations     Validierungs Middlewares
+└── test                Tests
+    ├── integration     Integration Tests
+    └── unit            Unit Tests
 ```
 
 <!-- Database -->
@@ -110,6 +127,26 @@ Prisma hilft uns, Datenbankabfragen in einer besser lesbaren und intuitiven Weis
 Wenn Sie sich für die Struktur unserer Datenbank interessieren, können Sie einen Blick auf das unten dargestellte Datenmodell werfen, das einen Überblick über die Tabellen, Spalten und Beziehungen innerhalb der Datenbank gibt.
 
 ![ERD](assets/mysql_erd.png)
+
+<!-- Diagramme -->
+
+### Diagramme
+
+#### Login und Register Sequenzdiagramm
+
+![Auth Sequenzdiagramm](assets/sequence_dia_auth.drawio.png)
+
+#### Create Tournament Sequenzdiagramm
+
+![Create Tournament Sequenzdiagramm](assets/sequence_dia_socket_create_tournament.drawio.png)
+
+#### Join Tournament Sequenzdiagramm
+
+![Join Tournament Sequenzdiagramm](assets/sequence_dia_socket_join_tournament.drawio.png)
+
+#### Matchmaking Ablaufdiagramm
+
+![Matchmaking Ablaufsdiagramm](assets/matchmaking.drawio.png)
 
 <!-- Env Variables -->
 
