@@ -336,6 +336,8 @@ Sendet allen Clients im Tunier updates über verschiedene Sachen (Tunier start/e
 
 #### `match:invite`
 
+> Wichtig: match:invite ist deaktiviert worden da die Python Clients keine Acknowledgments auf broadcast emits senden können
+
 Sendet einem Spieler, der sich in einem laufenden Turnier befindet und auf ein neues Spiel wartet, eine Einladung zu einem Match.
 
 > Die Einladung muss per Acknowledgment in 10 Sekunden angenommen werden
