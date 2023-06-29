@@ -89,12 +89,18 @@ Um einen umfassenden Überblick über die API des Servers zu erhalten, stehen zw
 
 ```txt
 .
+├── CONTRIBUTE.md       Contribution Guide
+├── Changelog.md        Changelogs
+├── Dockerfile          DOckerfile
+├── Endpoints.md        Dokumentation der Endpoints
+├── README.md           Readme
 ├── api-test            REST API Tests
 │   ├── postman         Postman Tests
 │   └── thunder-client  Thunder Client Tests
 ├── assets              Assets (Bilder, Diagramme, etc.)
 ├── prisma
-│   └── migrations      Prisma Migrationen
+│   ├── migrations      Prisma Migrationen
+│   └── schema.prisma   Primsa Schema für die Datenbank
 ├── src
 │   ├── config          Config Dateien
 │   ├── controller      Controller
@@ -102,16 +108,27 @@ Um einen umfassenden Überblick über die API des Servers zu erhalten, stehen zw
 │   ├── interfaces      Typescript Interfaces
 │   ├── middleware      Middlewares
 │   │   └── socket      Socket.io Middlewares
-│   ├── model           Modele
+│   ├── model           Modelle
 │   ├── routes          Routen/Endpoints
 │   ├── service         Services
 │   ├── socket          Socket.io Sezifische Controller
 │   ├── types           Typescript Types
 │   ├── utils           Utility Klassen und Funktionen
-│   └── validations     Validierungs Middlewares
-└── test                Tests
-    ├── integration     Integration Tests
-    └── unit            Unit Tests
+│   ├── validations     Validierungs Middlewares
+│   ├── app.ts          Express App
+│   └── index.ts        Server Entrypoint
+├── test                Tests
+│   ├── integration     Integration Tests
+│   └── unit            Unit Tests
+├── jest.config.ts      Jest Config
+├── package-lock.json   Lockfile für npm (Für das Dockerfile)
+├── package.json        Package.json
+├── tsconfig.build.json Typescript Config für Build Stage
+├── tsconfig.json       Basis Typescript Config
+├── tsconfig.test.json  Typescript Config für Tests
+├── web.config          Web Config
+├── yarn-error.log      Yarn Error Logs
+└── yarn.lock           Lockfile für yarn
 ```
 
 <!-- Database -->
